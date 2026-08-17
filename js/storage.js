@@ -1,6 +1,7 @@
-/* CyberLab LocalStorage State Manager — schema validation + safe backup import */
+/* CyberLab LocalStorage State Manager — isolated per account + validated backups */
 
-const STORAGE_KEY = 'cyberlab_user_data_v2';
+const STORAGE_PREFIX = 'cyberlab_user_data_v3_';
+const LEGACY_KEYS = ['cyberlab_user_data_v2', 'cyberlab_user_data_v1'];
 const REVIEW_INTERVALS = [1, 3, 7, 14, 30];
 
 const DEFAULT_STATE = {
@@ -37,21 +38,58 @@ function sanitizeState(input) {
 }
 
 class StorageManager {
-  constructor() { this.data = this.loadData(); this.checkStreak(); }
-  loadData() {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('cyberlab_user_data_v1');
-      const data = stored ? sanitizeState(JSON.parse(stored)) : cloneDefaultState();
-      this.saveData(data, false);
-      return data;
-    } catch (e) { console.error('Error al cargar LocalStorage:', e); return cloneDefaultState(); }
+  constructor() {
+    this.activeAccountId = null;
+    this.data = cloneDefaultState();
   }
+
+  key(accountId = this.activeAccountId) {
+    return accountId ? `${STORAGE_PREFIX}${accountId}` : null;
+  }
+
+  setActiveAccount(accountId) {
+    this.activeAccountId = accountId;
+    if (!accountId) { this.data = cloneDefaultState(); return; }
+    this.data = this.loadForAccount(accountId);
+    this.checkStreak();
+    window.dispatchEvent(new CustomEvent('cyberlab_state_updated', { detail: this.data }));
+  }
+
+  loadForAccount(accountId) {
+    try {
+      const key = this.key(accountId);
+      let stored = key ? localStorage.getItem(key) : null;
+      if (!stored) {
+        const accounts = window.CyberAccounts?.accounts || [];
+        const isFirstAccount = accounts.length === 1 && accounts[0]?.id === accountId;
+        if (isFirstAccount) {
+          for (const legacyKey of LEGACY_KEYS) {
+            const legacy = localStorage.getItem(legacyKey);
+            if (legacy) { stored = legacy; localStorage.removeItem(legacyKey); break; }
+          }
+        }
+      }
+      const source = stored ? JSON.parse(stored)?.data || JSON.parse(stored) : cloneDefaultState();
+      const data = sanitizeState(source);
+      localStorage.setItem(key, JSON.stringify(data));
+      return data;
+    } catch (e) {
+      console.error('Error al cargar el perfil:', e);
+      return cloneDefaultState();
+    }
+  }
+
   saveData(data = this.data, emit = true) {
     this.data = sanitizeState(data);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) { console.error('Error al guardar:', e); }
+    try {
+      if (!this.activeAccountId) throw new Error('No hay cuenta activa');
+      localStorage.setItem(this.key(), JSON.stringify(this.data));
+    } catch (e) { console.error('Error al guardar:', e); }
     if (emit) window.dispatchEvent(new CustomEvent('cyberlab_state_updated', { detail: this.data }));
   }
+
   checkStreak() {
+    if (!this.activeAccountId) return;
     const today = new Date().toISOString().split('T')[0];
     const last = this.data.lastActiveDate;
     if (!last || last === today) return;
@@ -60,29 +98,34 @@ class StorageManager {
     this.data.lastActiveDate = today;
     this.saveData();
   }
+
   exportBackup() {
-    const payload = { schemaVersion: 2, exportedAt: new Date().toISOString(), data: this.data };
+    const account = window.CyberAccounts?.getActive();
+    const payload = { schemaVersion: 3, exportedAt: new Date().toISOString(), username: account?.username || 'Usuario', data: this.data };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob); const a = document.createElement('a');
-    a.href = url; a.download = `cyberlab_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.href = url; a.download = `cyberlab_${account?.username || 'usuario'}_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   }
+
   importBackup(jsonText) {
     try {
       const parsed = JSON.parse(jsonText);
       const candidate = isObject(parsed) && isObject(parsed.data) ? parsed.data : parsed;
       if (!isObject(candidate)) throw new Error('Formato inválido');
-      const sanitized = sanitizeState(candidate);
-      this.saveData(sanitized);
+      this.saveData(sanitizeState(candidate));
       alert('¡Progreso importado y validado con éxito!');
       window.location.reload();
     } catch (e) { console.error(e); alert('La copia no es válida o está dañada.'); }
   }
+
   resetAllData() {
-    if (confirm('¿Estás seguro de que deseas reiniciar todo tu progreso?')) {
-      localStorage.removeItem(STORAGE_KEY); localStorage.removeItem('cyberlab_user_data_v1'); window.location.reload();
+    if (confirm('¿Estás seguro de que deseas reiniciar todo tu progreso de este usuario?')) {
+      if (this.activeAccountId) localStorage.removeItem(this.key());
+      window.location.reload();
     }
   }
 }
+
 window.CyberStorage = new StorageManager();
 window.CyberLabReviewIntervals = REVIEW_INTERVALS;
