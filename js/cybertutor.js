@@ -80,8 +80,8 @@ class CyberTutorEngine {
 
     c.innerHTML=`
       <div class="card" style="margin-bottom:20px">
-        <div class="card-header"><h2>🤖 CyberTutor — Tutor de Ciberseguridad</h2><span class="tag cyan">Gemini 3.6 Flash + Memoria e Historial</span></div>
-        <p style="color:var(--text-muted)">CyberTutor conoce tu nivel, racha y progreso en vivo sin que se lo digas. Respuestas estructuradas y notificaciones de estudio.</p>
+        <div class="card-header"><h2>🤖 CyberTutor — Tutor de Ciberseguridad</h2><span class="tag cyan">Gemini Ultra Fast + Respuesta en Vivo</span></div>
+        <p style="color:var(--text-muted)">CyberTutor conoce tu nivel, racha y progreso en vivo sin que se lo digas. Respuestas estructuradas e instantáneas.</p>
       </div>
       <div class="tutor-container">
         <div class="tutor-prompts-sidebar">
@@ -194,7 +194,6 @@ class CyberTutorEngine {
     if(!msg)return;
     i.value='';
 
-    // Save study timestamp for notifications
     localStorage.setItem('cyberlab_last_study_timestamp', Date.now().toString());
 
     this.addBubble('user', msg);
@@ -209,6 +208,13 @@ class CyberTutorEngine {
       role: h.role === 'tutor' ? 'model' : 'user',
       content: h.content
     }));
+
+    // Add typing indicator bubble
+    const typingBubble = this.addBubble(
+      'tutor',
+      `🤖 CyberTutor está escribiendo<span class="typing-dots"><span></span><span></span><span></span></span>`,
+      true
+    );
 
     try {
       this.setBusy(true);
@@ -227,14 +233,25 @@ class CyberTutorEngine {
       if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
 
       const answer = d.answer || 'No recibí una respuesta válida.';
-      this.addBubble('tutor', answer);
+
+      // Replace typing bubble with actual parsed answer
+      if (typingBubble) {
+        typingBubble.innerHTML = this.parseMarkdown(answer);
+      } else {
+        this.addBubble('tutor', answer);
+      }
 
       this.chatHistory.push({ role: 'user', content: msg });
       this.chatHistory.push({ role: 'tutor', content: answer });
 
     } catch (e) {
       console.error(e);
-      this.addBubble('tutor', `No pude conectar con Gemini. ${e.message || ''}`.trim());
+      const errText = `No pude conectar con Gemini. ${e.message || ''}`.trim();
+      if (typingBubble) {
+        typingBubble.innerHTML = this.esc(errText);
+      } else {
+        this.addBubble('tutor', errText);
+      }
     } finally {
       this.setBusy(false);
     }
@@ -245,7 +262,7 @@ class CyberTutorEngine {
     if (!("Notification" in window)) return;
     const lastCheck = localStorage.getItem('cyberlab_last_notif_check');
     const now = Date.now();
-    if (!lastCheck || (now - Number(lastCheck)) > 3600000) { // check every hour
+    if (!lastCheck || (now - Number(lastCheck)) > 3600000) {
       localStorage.setItem('cyberlab_last_notif_check', now.toString());
       this.checkStudyReminders();
     }
@@ -300,7 +317,6 @@ class CyberTutorEngine {
     const hoursInactive = (Date.now() - lastStudy) / 3600000;
     const streak = this.storage?.data?.streak || 1;
 
-    // If inactive for > 24 hours
     if (hoursInactive >= 24) {
       const msg = `⚡ CyberTutor te extraña: Llevas ${Math.floor(hoursInactive / 24)} día(s) sin estudiar. ¡Ingresa hoy a CyberLab para mantener tu racha de ${streak} días!`;
       this.sendNotification('🛡️ CyberTutor — Recordatorio de Estudio', msg);

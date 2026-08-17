@@ -1,8 +1,8 @@
 const GEMINI_MODELS = [
+  'gemini-3.1-flash-lite',
   'gemini-flash-latest',
   'gemini-3.7-flash',
-  'gemini-3.5-flash',
-  'gemini-flash-lite-latest'
+  'gemini-3.5-flash'
 ];
 
 const SYSTEM_PROMPT = `Eres CyberTutor, el tutor personal de ciberseguridad de CyberLab.
@@ -146,14 +146,14 @@ async function callGemini(apiKey, payload) {
         lastError = data?.error?.message || `HTTP ${response.status}`;
 
         if (response.status === 503 || response.status === 429) {
-          await new Promise(r => setTimeout(r, 600));
+          await new Promise(r => setTimeout(r, 300));
         } else {
           break;
         }
       } catch (err) {
         console.error(`Fetch error model ${modelName}:`, err);
         lastError = err.message;
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 300));
       }
     }
   }
@@ -225,7 +225,7 @@ export default {
       contents: contents,
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 1800
+        maxOutputTokens: 1200
       }
     };
 
