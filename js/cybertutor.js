@@ -1,8 +1,10 @@
 /* CyberLab CyberTutor — Gemini text chat + optional Gladia voice.
    IMPORTANT: API secrets stay in the Cloudflare Worker, never in this file. */
+const CYBERLAB_CYBERTUTOR_ENDPOINT = 'https://cyberla-cybertutor.tapiashdicson.workers.dev/api/cybertutor';
+
 class CyberTutorEngine {
   constructor(){ this.storage=window.CyberStorage; this.mediaRecorder=null; this.audioChunks=[]; this.busy=false; }
-  endpoint(){ return localStorage.getItem('cyberlab_cybertutor_endpoint') || window.CYBERLAB_CONFIG?.cybertutorEndpoint || ''; }
+  endpoint(){ return localStorage.getItem('cyberlab_cybertutor_endpoint') || window.CYBERLAB_CONFIG?.cybertutorEndpoint || CYBERLAB_CYBERTUTOR_ENDPOINT; }
   esc(v){return String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));}
 
   render(){
@@ -23,7 +25,7 @@ class CyberTutorEngine {
             <strong>🧠 Gemini:</strong><p style="color:var(--text-muted);margin:5px 0 0">Tu API key se guarda solamente en el backend de Cloudflare. El navegador nunca recibe la clave.</p>
           </div>
           <div style="margin-top:12px;padding:12px;border-radius:10px;background:rgba(163,113,247,.08);border:1px solid rgba(163,113,247,.2);font-size:.8rem">
-            <strong>🎙️ Voz:</strong><p style="color:var(--text-muted);margin:5px 0 0">La voz usa el mismo backend; si configuras Gladia, puedes hablar con CyberTutor.</p>
+            <strong>🎙️ Voz:</strong><p style="color:var(--text-muted);margin:5px 0 0">La voz usa el mismo botón; si configuras Gladia, puedes hablar con CyberTutor.</p>
           </div>
           <button id="cybertutor-config-btn" class="btn btn-secondary" style="margin-top:12px;width:100%">⚙️ Configurar backend</button>
         </div>
@@ -63,11 +65,11 @@ class CyberTutorEngine {
   async sendUserMessage(){
     const i=document.getElementById('tutor-user-input');if(!i||this.busy)return;const msg=i.value.trim();if(!msg)return;i.value='';this.addBubble('user',msg);
     const endpoint=this.endpoint();
-    if(!endpoint){this.addBubble('tutor','Configura primero la URL del backend de CyberTutor en ⚙️ Configurar backend.');return;}
+    if(!endpoint){this.addBubble('tutor','No se encontró el backend de CyberTutor.');return;}
     try{
       this.setBusy(true);const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'text',message:msg,student:this.buildStudentContext()})});
       const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);this.addBubble('tutor',d.answer||'No recibí una respuesta válida.');
-    }catch(e){console.error(e);this.addBubble('tutor','No pude conectar con Gemini. Revisa que el Worker esté desplegado y que GEMINI_API_KEY esté configurada.');}
+    }catch(e){console.error(e);this.addBubble('tutor',`No pude conectar con Gemini. ${e.message || ''}`.trim());}
     finally{this.setBusy(false);}
   }
 
@@ -91,7 +93,7 @@ class CyberTutorEngine {
       fd.append('prompt',`Eres CyberTutor, tutor experto de ciberseguridad. Responde en español. Estudiante: ${JSON.stringify(this.buildStudentContext())}. Explica, corrige errores y propone práctica segura.`);
       const r=await fetch(endpoint,{method:'POST',body:fd});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);
       if(d.transcript)this.addBubble('user',`🎙️ Transcripción: ${d.transcript}`);this.addBubble('tutor',d.answer||'No recibí una respuesta válida.');
-    }catch(e){console.error(e);this.addBubble('tutor','No pude procesar el audio. Comprueba que el Worker tenga GLADIA_API_KEY configurada si estás usando voz.');}
+    }catch(e){console.error(e);this.addBubble('tutor','No pude procesar el audio. Comprueba que el Worker de voz esté configurado.');}
     finally{this.setBusy(false);const b=document.getElementById('tutor-mic-btn');if(b)b.textContent='🎙️ Hablar';}
   }
 
@@ -99,7 +101,7 @@ class CyberTutorEngine {
     const current=this.endpoint();const endpoint=prompt('URL de tu Cloudflare Worker para CyberTutor:',current||'');if(endpoint===null)return;
     if(endpoint && !/^https:\/\//i.test(endpoint))return alert('Usa una URL HTTPS.');
     if(endpoint)localStorage.setItem('cyberlab_cybertutor_endpoint',endpoint);else localStorage.removeItem('cyberlab_cybertutor_endpoint');
-    alert(endpoint?'Backend guardado.':'Backend eliminado.');
+    alert(endpoint?'Backend guardado.':'Backend restablecido al backend predeterminado.');
   }
 }
 window.CyberTutor=new CyberTutorEngine();
