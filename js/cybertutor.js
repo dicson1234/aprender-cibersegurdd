@@ -9,6 +9,7 @@ class CyberTutorEngine {
     this.audioChunks = [];
     this.busy = false;
     this.chatHistory = [];
+    this.initNotifications();
   }
 
   endpoint(){
@@ -19,39 +20,103 @@ class CyberTutorEngine {
     return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  parseMarkdown(text) {
+    if (!text) return '';
+    let str = String(text);
+
+    // Code blocks ```code```
+    str = str.replace(/```([a-z]*)\n([\s\S]*?)```/gi, (match, lang, code) => {
+      const cleanCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<pre><code>${cleanCode.trim()}</code></pre>`;
+    });
+
+    // Inline code `code`
+    str = str.replace(/`([^`]+)`/g, (match, code) => {
+      const cleanCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;color:#00f0ff">${cleanCode}</code>`;
+    });
+
+    // Headers (### Header -> <h3>Header</h3>)
+    str = str.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    str = str.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    str = str.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+    // Horizontal Rule (--- -> <hr>)
+    str = str.replace(/^---$/gim, '<hr>');
+
+    // Blockquotes (> Quote -> blockquote)
+    str = str.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+    // Bold (**bold**) & Italic (*italic*)
+    str = str.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    str = str.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // Unordered lists (* or - item)
+    str = str.replace(/^[\*\-] (.*$)/gim, '<ul><li>$1</li></ul>');
+    str = str.replace(/<\/ul>\s*<ul>/g, '');
+
+    // Ordered lists (1. item)
+    str = str.replace(/^\d+\. (.*$)/gim, '<ol><li>$1</li></ol>');
+    str = str.replace(/<\/ol>\s*<ol>/g, '');
+
+    // Divide into paragraphs by double line breaks
+    const blocks = str.split(/\n{2,}/);
+    str = blocks.map(b => {
+      const trimmed = b.trim();
+      if (!trimmed) return '';
+      if (/^<(h[1-3]|pre|blockquote|ul|ol|hr)/i.test(trimmed)) {
+        return trimmed;
+      }
+      return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`;
+    }).join('');
+
+    return str;
+  }
+
   render(){
     const c=document.getElementById('cybertutor-root'); if(!c)return;
+    const notifStatus = ("Notification" in window) ? Notification.permission : 'unsupported';
+    const notifLabel = notifStatus === 'granted' ? '🔔 Notificaciones Activas' : '🔔 Activar Notificaciones';
+
     c.innerHTML=`
       <div class="card" style="margin-bottom:20px">
-        <div class="card-header"><h2>🤖 CyberTutor — Tutor de Ciberseguridad</h2><span class="tag cyan">Gemini 3.6 Flash + aprendizaje adaptativo</span></div>
-        <p style="color:var(--text-muted)">Chatea con Gemini a través de un backend seguro. Conversación continua y fluida.</p>
+        <div class="card-header"><h2>🤖 CyberTutor — Tutor de Ciberseguridad</h2><span class="tag cyan">Gemini 3.6 Flash + Memoria e Historial</span></div>
+        <p style="color:var(--text-muted)">CyberTutor conoce tu nivel, racha y progreso en vivo sin que se lo digas. Respuestas estructuradas y notificaciones de estudio.</p>
       </div>
       <div class="tutor-container">
         <div class="tutor-prompts-sidebar">
+          <div style="font-weight:700;color:var(--accent-cyan);margin-bottom:8px">ACCIONES RÁPIDAS</div>
+          <button class="btn btn-primary" style="font-size:.8rem;text-align:left;width:100%;margin-bottom:6px" onclick="CyberTutor.requestDiagnostic()">📊 Mi Diagnóstico Automático</button>
+          <button id="cybertutor-notif-btn" class="btn btn-secondary" style="font-size:.8rem;text-align:left;width:100%;margin-bottom:12px" onclick="CyberTutor.toggleNotifications()">${notifLabel}</button>
+
           <div style="font-weight:700;color:var(--accent-cyan);margin-bottom:8px">PROMPTS RECOMENDADOS</div>
           <button class="btn btn-secondary" style="font-size:.8rem;text-align:left" onclick="CyberTutor.sendPreset('Explícame TCP como si tuviera 10 años.')">👶 TCP como a un niño</button>
           <button class="btn btn-secondary" style="font-size:.8rem;text-align:left" onclick="CyberTutor.sendPreset('Explícame TCP a nivel técnico universitario y ponme un ejemplo.')">🎓 TCP universitario</button>
           <button class="btn btn-secondary" style="font-size:.8rem;text-align:left" onclick="CyberTutor.sendPreset('Evalúame con 5 preguntas sobre redes y dime exactamente qué debo repasar.')">📝 Evalúame</button>
           <button class="btn btn-secondary" style="font-size:.8rem;text-align:left" onclick="CyberTutor.sendPreset('Según mi progreso, ¿qué debería estudiar después?')">🎯 Qué estudiar ahora</button>
-          <div style="margin-top:18px;padding:12px;border-radius:10px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.2);font-size:.8rem">
-            <strong>🧠 Gemini 3.6:</strong><p style="color:var(--text-muted);margin:5px 0 0">Tu API key se guarda solamente en el backend de Cloudflare. El navegador nunca recibe la clave.</p>
+          
+          <div style="margin-top:14px;padding:12px;border-radius:10px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.2);font-size:.8rem">
+            <strong>🧠 Diagnóstico Invisible:</strong><p style="color:var(--text-muted);margin:5px 0 0">Nivel ${this.storage?.data?.level || 1} • ${this.storage?.data?.xp || 0} XP • Racha ${this.storage?.data?.streak || 1} días. CyberTutor lee tu avance automáticamente.</p>
           </div>
           <button id="cybertutor-clear-btn" class="btn btn-secondary" style="margin-top:12px;width:100%">🗑️ Limpiar chat</button>
           <button id="cybertutor-config-btn" class="btn btn-secondary" style="margin-top:8px;width:100%">⚙️ Configurar backend</button>
         </div>
         <div class="tutor-chat-window">
-          <div class="chat-history" id="tutor-chat-history"><div class="chat-bubble tutor">¡Hola! Soy tu <strong>CyberTutor</strong>. Estás en Nivel ${this.storage?.data?.level || 1} (${this.storage?.data?.xp || 0} XP). ¿Qué quieres aprender hoy?</div></div>
+          <div class="chat-history" id="tutor-chat-history"><div class="chat-bubble tutor">¡Hola! Soy tu <strong>CyberTutor</strong>. Conozco tu progreso actual (Nivel ${this.storage?.data?.level || 1}, ${this.storage?.data?.xp || 0} XP, Racha: ${this.storage?.data?.streak || 1} días). ¿En qué concepto o laboratorio quieres profundizar hoy?</div></div>
           <div class="chat-input-bar" style="flex-wrap:wrap">
-            <input type="text" id="tutor-user-input" class="chat-input" placeholder="Escribe tu duda..." onkeypress="if(event.key==='Enter') CyberTutor.sendUserMessage()" />
+            <input type="text" id="tutor-user-input" class="chat-input" placeholder="Escribe tu duda o responde a CyberTutor..." onkeypress="if(event.key==='Enter') CyberTutor.sendUserMessage()" />
             <button class="btn btn-primary" id="tutor-send-btn">Enviar</button>
             <button class="btn btn-secondary" id="tutor-mic-btn">🎙️ Hablar</button>
           </div>
         </div>
       </div>`;
+
     c.querySelector('#tutor-send-btn').onclick=()=>this.sendUserMessage();
     c.querySelector('#tutor-mic-btn').onclick=()=>this.toggleRecording();
     c.querySelector('#cybertutor-clear-btn').onclick=()=>this.clearChat();
     c.querySelector('#cybertutor-config-btn').onclick=()=>this.configureEndpoint();
+
+    this.checkStudyReminders();
   }
 
   addBubble(role, text, html = false) {
@@ -62,13 +127,11 @@ class CyberTutorEngine {
 
     if (html) {
       b.innerHTML = text;
+    } else if (role === 'tutor') {
+      b.innerHTML = this.parseMarkdown(text);
     } else {
       const parsed = String(text ?? '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;color:#00f0ff">$1</code>')
-        .replace(/\n\n/g, '<br><br>')
         .replace(/\n/g, '<br>');
       b.innerHTML = parsed;
     }
@@ -82,7 +145,7 @@ class CyberTutorEngine {
     this.chatHistory = [];
     const h = document.getElementById('tutor-chat-history');
     if (h) {
-      h.innerHTML = `<div class="chat-bubble tutor">¡Hola! Soy tu <strong>CyberTutor</strong>. He reiniciado nuestra conversación. ¿En qué puedo ayudarte?</div>`;
+      h.innerHTML = `<div class="chat-bubble tutor">¡Hola! He limpiado el historial del chat. Sé que estás en Nivel ${this.storage?.data?.level || 1}. ¿Qué tema deseas repasar?</div>`;
     }
   }
 
@@ -101,6 +164,11 @@ class CyberTutorEngine {
     }
   }
 
+  requestDiagnostic(){
+    const msg = "CyberTutor, analiza mi progreso actual, mi nivel, racha y actividades completadas sin que yo te los diga, y dame un diagnóstico de mi rendimiento y recomendaciones.";
+    this.sendPreset(msg);
+  }
+
   buildStudentContext(){
     const d=this.storage?.data||{};
     return {
@@ -112,6 +180,8 @@ class CyberTutorEngine {
       mastery:d.masteryLevels||{},
       mistakes:(d.mistakes||[]).slice(-20),
       completedModules:(d.completedModules||[]).slice(-30),
+      passedQuizzes:(d.passedQuizzes||[]).slice(-20),
+      completedLabs:(d.completedLabs||[]).slice(-20),
       primaryObjective:d.primaryObjective||'',
       secondaryObjective:d.secondaryObjective||''
     };
@@ -124,6 +194,9 @@ class CyberTutorEngine {
     if(!msg)return;
     i.value='';
 
+    // Save study timestamp for notifications
+    localStorage.setItem('cyberlab_last_study_timestamp', Date.now().toString());
+
     this.addBubble('user', msg);
 
     const endpoint=this.endpoint();
@@ -132,7 +205,6 @@ class CyberTutorEngine {
       return;
     }
 
-    // Build payload with chat history for context continuity
     const payloadHistory = this.chatHistory.slice(-12).map(h => ({
       role: h.role === 'tutor' ? 'model' : 'user',
       content: h.content
@@ -157,7 +229,6 @@ class CyberTutorEngine {
       const answer = d.answer || 'No recibí una respuesta válida.';
       this.addBubble('tutor', answer);
 
-      // Save to chat history
       this.chatHistory.push({ role: 'user', content: msg });
       this.chatHistory.push({ role: 'tutor', content: answer });
 
@@ -166,6 +237,73 @@ class CyberTutorEngine {
       this.addBubble('tutor', `No pude conectar con Gemini. ${e.message || ''}`.trim());
     } finally {
       this.setBusy(false);
+    }
+  }
+
+  /* Notifications & Inactivity Reminders */
+  initNotifications() {
+    if (!("Notification" in window)) return;
+    const lastCheck = localStorage.getItem('cyberlab_last_notif_check');
+    const now = Date.now();
+    if (!lastCheck || (now - Number(lastCheck)) > 3600000) { // check every hour
+      localStorage.setItem('cyberlab_last_notif_check', now.toString());
+      this.checkStudyReminders();
+    }
+  }
+
+  async toggleNotifications() {
+    if (!("Notification" in window)) {
+      alert('Tu navegador no soporta notificaciones Web.');
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      this.sendNotification(
+        '⚡ CyberTutor — Notificaciones Activas',
+        `CyberTutor te enviará recordatorios para cuidar tu racha de ${this.storage?.data?.streak || 1} días.`
+      );
+      alert('¡Las notificaciones ya están activas y funcionando!');
+      return;
+    }
+
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      this.sendNotification(
+        '⚡ CyberTutor Activado',
+        `¡Excelente! CyberTutor te avisará cuando lleves tiempo sin repasar ciberseguridad.`
+      );
+      const btn = document.getElementById('cybertutor-notif-btn');
+      if (btn) btn.textContent = '🔔 Notificaciones Activas';
+    } else {
+      alert('Permiso de notificaciones denegado. Puedes cambiarlo en los ajustes de tu navegador.');
+    }
+  }
+
+  sendNotification(title, body) {
+    if (!("Notification" in window) || Notification.permission !== 'granted') return;
+    try {
+      new Notification(title, {
+        body,
+        icon: 'https://dicson1234.github.io/aprender-cibersegurdd/favicon.ico',
+        badge: 'https://dicson1234.github.io/aprender-cibersegurdd/favicon.ico'
+      });
+    } catch (e) {
+      console.warn('No se pudo lanzar notificación web:', e);
+    }
+  }
+
+  checkStudyReminders() {
+    const lastStudyStr = localStorage.getItem('cyberlab_last_study_timestamp');
+    if (!lastStudyStr) return;
+
+    const lastStudy = Number(lastStudyStr);
+    const hoursInactive = (Date.now() - lastStudy) / 3600000;
+    const streak = this.storage?.data?.streak || 1;
+
+    // If inactive for > 24 hours
+    if (hoursInactive >= 24) {
+      const msg = `⚡ CyberTutor te extraña: Llevas ${Math.floor(hoursInactive / 24)} día(s) sin estudiar. ¡Ingresa hoy a CyberLab para mantener tu racha de ${streak} días!`;
+      this.sendNotification('🛡️ CyberTutor — Recordatorio de Estudio', msg);
     }
   }
 

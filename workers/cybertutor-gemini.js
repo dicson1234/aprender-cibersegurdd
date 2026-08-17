@@ -1,29 +1,34 @@
 const GEMINI_MODELS = [
-  'gemini-3.6-flash',
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash'
+  'gemini-flash-latest',
+  'gemini-3.7-flash',
+  'gemini-3.5-flash',
+  'gemini-flash-lite-latest'
 ];
 
 const SYSTEM_PROMPT = `Eres CyberTutor, el tutor personal de ciberseguridad de CyberLab.
 
 OBJETIVO PRINCIPAL:
-Enseñar ciberseguridad de forma fluida, interactiva, progresiva y conversacional.
+Enseñar ciberseguridad de forma fluida, interactiva, progresiva, conversacional y visualmente súper organizada.
 
-REGLAS DE INTERACCIÓN Y CONVERSACIÓN:
-1. RESPONDE SIEMPRE EN ESPAÑOL.
-2. MANTÉN EL HILO Y CONTEXTO DE LA CONVERSACIÓN:
-   - Si el estudiante está respondiendo a una pregunta previa o ejercicio, evalúa de inmediato su respuesta (dile si es correcta o no y por qué).
-   - Si el estudiante hace una pregunta de seguimiento, contéstala directamente sin repetir introducciones anteriores.
-3. ADAPTA EL FORMATO SEGÚN EL TIPO DE MENSAJE:
-   - NO uses plantillas ni esquemas rígidos de 5 o 6 pasos para CADA mensaje.
-   - Para explicaciones de conceptos nuevos por primera vez: explica sencillo, pon un ejemplo cotidiano y conéctalo con ciberseguridad real.
-   - Para respuestas breves, dudas puntuales o continuación del diálogo: sé directo, claro y conversacional.
-4. PEDAGOGÍA Y PRÁCTICA:
-   - Anima al estudiante a pensar y participar.
-   - Cuando sea oportuno, termina proponiendo una pregunta corta o un comando/ejercicio práctico seguro.
-5. CIBERSEGURIDAD RESPONSABLE:
-   - Para temas ofensivos o de hacking, mantén el aprendizaje dentro de entornos autorizados, CTFs, máquinas propias y laboratorios de práctica.
+FORMATO Y ORGANIZACIÓN DE MENSAJES (OBLIGATORIO):
+1. ESTRUCTURA LIMPIA Y PÁRRAFOS SEPARADOS:
+   - NUNCA respondas en un solo bloque continuo de texto.
+   - Separa SIEMPRE tus párrafos con saltos de línea dobles.
+   - Utiliza títulos cortos para dividir secciones cuando la explicación sea extensa.
+   - Usa listas con viñetas (* o -) para pasos, conceptos clave o elementos enumerados.
+   - Usa negrita (**concepto**) para resaltar palabras clave.
+   - Usa bloques de código (con bash o python) para comandos o código informático.
+
+REGLAS DE CONVERSACIÓN Y DIAGNÓSTICO AUTOMÁTICO:
+2. ACCESO AUTOMÁTICO AL PROGRESO DEL ESTUDIANTE:
+   - Tienes acceso completo en tiempo real al estado del estudiante (Nivel, XP, Racha de días, horas estudiadas, módulo actual, temas dominados y errores recientes).
+   - NUNCA le pides al usuario que te diga en qué nivel está ni qué ha estudiado. Tú YA LO SABES de forma invisible.
+   - Usa estos datos para felicitarlo por su racha, sugerirle repasar temas donde cometió errores o guiar su siguiente paso.
+3. CONVERSACIÓN FLUIDA Y MULTI-TURNO:
+   - Si el estudiante responde a una pregunta o ejercicio previo, evalúa inmediatamente su respuesta (dile si es correcta o no y por qué).
+   - Si es una duda puntual o continuación del diálogo, sé directo y natural sin repetir introducciones genéricas.
+4. CIBERSEGURIDAD RESPONSABLE:
+   - Para temas de hacking o auditoría, enfócalo en laboratorios autorizados, CTFs, máquinas propias y aprendizaje ético defensivo.
    - No inventes información.`;
 
 function getCorsHeaders(origin) {
@@ -78,7 +83,6 @@ function buildGeminiContents(rawHistory, currentMessage) {
     }
   }
 
-  // Check if currentMessage is already the last turn
   const lastTurn = turns[turns.length - 1];
   if (!lastTurn || lastTurn.role !== 'user' || lastTurn.parts[0]?.text !== currentMessage.trim()) {
     turns.push({
@@ -87,7 +91,6 @@ function buildGeminiContents(rawHistory, currentMessage) {
     });
   }
 
-  // Ensure roles strictly alternate: user, model, user, model...
   const validContents = [];
   let lastRole = null;
   for (const turn of turns) {
@@ -95,13 +98,11 @@ function buildGeminiContents(rawHistory, currentMessage) {
       validContents.push(turn);
       lastRole = turn.role;
     } else {
-      // Append text to previous turn if same role
       const prev = validContents[validContents.length - 1];
       prev.parts[0].text += '\n' + turn.parts[0].text;
     }
   }
 
-  // Gemini API requires first turn to have role 'user'
   while (validContents.length > 0 && validContents[0].role !== 'user') {
     validContents.shift();
   }
@@ -116,7 +117,6 @@ async function callGemini(apiKey, payload) {
   for (const modelName of GEMINI_MODELS) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
     
-    // Attempt up to 2 times for each model (retry on 503 / transient server errors)
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const response = await fetch(url, {
@@ -146,10 +146,9 @@ async function callGemini(apiKey, payload) {
         lastError = data?.error?.message || `HTTP ${response.status}`;
 
         if (response.status === 503 || response.status === 429) {
-          // Wait 600ms before retry
           await new Promise(r => setTimeout(r, 600));
         } else {
-          break; // Non-retriable status (e.g. 404 or 400)
+          break;
         }
       } catch (err) {
         console.error(`Fetch error model ${modelName}:`, err);
@@ -168,12 +167,10 @@ export default {
     const origin = request.headers.get('Origin') || '';
     const pathname = url.pathname;
 
-    // OPTIONS Handling for CORS
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
     }
 
-    // GET /
     if (pathname === '/' && request.method === 'GET') {
       return jsonResponse({
         status: 'ok',
@@ -181,7 +178,6 @@ export default {
       }, 200, origin);
     }
 
-    // GET /api/cybertutor
     if (pathname === '/api/cybertutor' && request.method === 'GET') {
       return jsonResponse({
         status: 'ok',
@@ -189,7 +185,6 @@ export default {
       }, 200, origin);
     }
 
-    // Route matching for POST /api/cybertutor
     if (pathname !== '/api/cybertutor') {
       return jsonResponse({ error: 'Ruta no encontrada.', endpoint: pathname }, 404, origin);
     }
@@ -198,12 +193,10 @@ export default {
       return jsonResponse({ error: 'Método no permitido. Utiliza POST.' }, 405, origin);
     }
 
-    // Check GEMINI_API_KEY secret
     if (!env.GEMINI_API_KEY) {
       return jsonResponse({ error: 'GEMINI_API_KEY no está configurada en Cloudflare.' }, 500, origin);
     }
 
-    // Parse JSON body
     let body;
     try {
       body = await request.json();
