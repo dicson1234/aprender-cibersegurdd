@@ -29,13 +29,12 @@ class AccountsManager {
   loadAccounts() {
     try {
       const parsed = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]');
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map(a => ({ ...accountDefaults, ...a, privateProfile: a.privateProfile !== false }));
     } catch { return []; }
   }
 
-  saveAccounts() {
-    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(this.accounts));
-  }
+  saveAccounts() { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(this.accounts)); }
 
   ensureMigration() {
     if (this.accounts.length || !localStorage.getItem('cyberlab_user_data_v1')) return;
@@ -402,10 +401,7 @@ class AccountsManager {
     }
   }
 
-  hideGate() {
-    const gate = document.getElementById('accounts-gate');
-    if (gate) gate.style.display = 'none';
-  }
+  hideGate() { const gate = document.getElementById('accounts-gate'); if (gate) gate.style.display = 'none'; }
 
   async logout() {
     this.activeId = null;
@@ -441,6 +437,14 @@ class AccountsManager {
     }
 
     window.dispatchEvent(new CustomEvent('cyberlab_account_changed', { detail: account }));
+  }
+
+  setPrivacy(isPrivate) {
+    const account = this.getActive(); if (!account) return;
+    account.privateProfile = Boolean(isPrivate);
+    this.saveAccounts();
+    window.dispatchEvent(new CustomEvent('cyberlab_account_changed', { detail: account }));
+    return account;
   }
 
   escape(value) { return String(value).replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c])); }
