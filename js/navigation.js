@@ -11,21 +11,29 @@ class NavigationManager {
       this.navigate(window.location.hash || '#dashboard');
     });
 
-    // Mobile sidebar drawer toggle
+    // Mobile sidebar drawer toggle & overlay management
     const toggleBtn = document.getElementById('mobile-drawer-toggle');
+    const closeBtn = document.getElementById('sidebar-close-btn');
     const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
 
-    if (toggleBtn && sidebar) {
-      toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('mobile-open');
-      });
-    }
+    const openSidebar = () => {
+      if (sidebar) sidebar.classList.add('mobile-open');
+      if (overlay) overlay.classList.add('active');
+    };
+
+    const closeSidebar = () => {
+      if (sidebar) sidebar.classList.remove('mobile-open');
+      if (overlay) overlay.classList.remove('active');
+    };
+
+    if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    if (overlay) overlay.addEventListener('click', closeSidebar);
 
     // Close sidebar on link click on mobile
     document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', () => {
-        if (sidebar) sidebar.classList.remove('mobile-open');
-      });
+      item.addEventListener('click', closeSidebar);
     });
 
     this.navigate(this.currentHash);

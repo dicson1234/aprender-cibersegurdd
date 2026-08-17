@@ -12,19 +12,23 @@
   <meta name="theme-color" content="#090d16">
 
   <!-- CSS Design System -->
-  <link rel="stylesheet" href="./css/variables.css?v=2">
-  <link rel="stylesheet" href="./css/main.css?v=2">
-  <link rel="stylesheet" href="./css/components.css?v=2">
+  <link rel="stylesheet" href="./css/variables.css?v=3">
+  <link rel="stylesheet" href="./css/main.css?v=3">
+  <link rel="stylesheet" href="./css/components.css?v=3">
 </head>
 <body>
 
   <div id="app-container">
-    <!-- Desktop Sidebar -->
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Desktop & Mobile Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo">
           <span>🛡️</span> CyberLab
         </div>
+        <button class="sidebar-close-mobile" id="sidebar-close-btn" title="Cerrar menú">✕</button>
       </div>
       <nav class="sidebar-nav">
         <div class="nav-section-label">Principal</div>
@@ -321,7 +325,7 @@
   <script src="./js/storage.js"></script>
   <script src="./js/gamification.js"></script>
   <script src="./js/datasets.js"></script>
-  <script src="./js/navigation.js"></script>
+  <script src="./js/navigation.js?v=3"></script>
   <script src="./js/dashboard.js"></script>
   <script src="./js/knowledge_map.js"></script>
   <script src="./js/learning_tree.js"></script>

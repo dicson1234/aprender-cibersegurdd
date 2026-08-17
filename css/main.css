@@ -45,9 +45,20 @@ html, body {
   height: var(--header-height);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   padding: 0 20px;
   border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-close-mobile {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  padding: 4px 8px;
+  cursor: pointer;
 }
 
 .sidebar-logo {
@@ -327,20 +338,50 @@ html, body {
 
 .modal-close:hover { color: var(--text-main); }
 
+/* Mobile Sidebar Overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 290;
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 992px) {
   .sidebar {
     transform: translateX(-100%);
+    z-index: 300;
+    width: 280px;
+    max-width: 85vw;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
   }
 
   .sidebar.mobile-open {
     transform: translateX(0);
   }
 
+  .sidebar-close-mobile {
+    display: block;
+  }
+
   .main-wrapper {
     margin-left: 0;
     width: 100%;
     padding-bottom: var(--mobile-nav-height);
+  }
+
+  .top-header {
+    padding-top: max(env(safe-area-inset-top), 28px);
+    padding-bottom: 10px;
+    height: auto;
+    min-height: calc(var(--header-height) + 20px);
   }
 
   .mobile-toggle {
@@ -352,27 +393,42 @@ html, body {
   }
 
   .search-bar-trigger {
-    width: 180px;
+    width: 160px;
   }
 }
 
 @media (max-width: 576px) {
   .content-body {
-    padding: 16px;
+    padding: 14px;
   }
 
   .top-header {
-    padding: 0 14px;
+    padding-left: 10px;
+    padding-right: 10px;
+    gap: 8px;
+  }
+
+  .header-left {
+    gap: 8px;
   }
 
   .search-bar-trigger {
-    width: 120px;
+    width: auto;
+    max-width: 120px;
     padding: 6px 10px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .user-stats-pill {
     padding: 4px 8px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    gap: 6px;
+  }
+
+  .stat-item {
+    font-size: 0.75rem;
   }
 }
