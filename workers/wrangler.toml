@@ -1,7 +1,7 @@
 name = "cyberlab-cybertutor"
-main = "cybertutor-gladia.js"
+main = "cybertutor-gemini.js"
 compatibility_date = "2026-08-17"
 
 [vars]
-# Keep secrets out of this file. Configure with:
-# wrangler secret put GLADIA_API_KEY
+# Secrets are never committed to Git.
+# Configure the Gemini secret with: wrangler secret put GEMINI_API_KEY
