@@ -1,8 +1,8 @@
 /* CyberLab Offline-First Service Worker */
-const CACHE_NAME = 'cyberlab-v7-mobile';
+const CACHE_NAME = 'cyberlab-v8-mobile-redesign';
 const ASSETS = [
   './','./index.html','./manifest.json',
-  './css/variables.css?v=5','./css/main.css?v=5','./css/components.css?v=5','./css/mobile.css?v=1',
+  './css/variables.css?v=5','./css/main.css?v=5','./css/components.css?v=5','./css/mobile.css?v=2',
   './js/accounts.js','./js/storage.js','./js/account_bootstrap.js','./js/gamification.js','./js/navigation.js?v=4','./js/dashboard.js','./js/knowledge_map.js','./js/learning_tree.js','./js/labs_engine.js','./js/quizzes_engine.js','./js/spaced_repetition.js','./js/notes_engine.js','./js/resources_engine.js','./js/cybertutor.js','./js/search.js','./js/app.js','./js/profile_accounts.js',
   './data/modules.json','./data/quizzes.json','./data/challenges.json','./data/labs.json','./data/resources.json','./data/glossary.json','./data/tools.json','./data/achievements.json','./data/projects.json','./data/roadmaps.json','./data/cases.json','./data/mitre.json'
 ];
