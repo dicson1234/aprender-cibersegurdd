@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CyberLab</string>
+    <string name="title_activity_main">CyberLab</string>
+    <string name="package_name">com.dicson.cyberlab</string>
+    <string name="custom_url_scheme">com.dicson.cyberlab</string>
+</resources>
