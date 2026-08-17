@@ -1,139 +1,88 @@
-/* CyberLab LocalStorage State Manager & Export/Import Manager */
+/* CyberLab LocalStorage State Manager — schema validation + safe backup import */
 
-const STORAGE_KEY = 'cyberlab_user_data_v1';
+const STORAGE_KEY = 'cyberlab_user_data_v2';
+const REVIEW_INTERVALS = [1, 3, 7, 14, 30];
 
 const DEFAULT_STATE = {
-  xp: 0,
-  level: 1,
-  streak: 1,
-  lastActiveDate: new Date().toISOString().split('T')[0],
-  hoursStudied: 0.5,
-  masteryLevels: {}, // { conceptId: 0..6 }
-  completedModules: [],
-  passedQuizzes: [],
-  completedLabs: [],
-  completedChallenges: [],
-  notes: [
-    {
-      id: 'note-sample-1',
-      title: 'Diferencia entre TCP y UDP',
-      area: 'Redes',
-      tags: ['TCP', 'UDP', 'Networking'],
-      content: 'TCP es orientado a conexión y garantiza entrega (Handshake 3 vías). UDP no es orientado a conexión y prioriza velocidad (VoIP, DNS, Streaming).',
-      notUnderstood: false,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'note-sample-2',
-      title: 'Investigar Handshake TLS 1.3',
-      area: 'Internet',
-      tags: ['TLS', 'HTTPS'],
-      content: 'Aún no me queda 100% claro cómo se negocia la clave simétrica en 1 solo RTT en TLS 1.3.',
-      notUnderstood: true,
-      createdAt: new Date().toISOString()
-    }
-  ],
-  mistakes: [], // [ { id, questionId, question, wrongAnswer, correctAnswer, explanation, date, reviewDueDate, reviewStage } ]
-  resourceRatings: {},
-  unlockedAchievements: [],
-  goals: {
-    dailyMinutes: 30,
-    dailyCompleted: false,
-    weeklyModules: 2,
-    weeklyCompleted: false
-  },
+  xp: 0, level: 1, streak: 1, lastActiveDate: new Date().toISOString().split('T')[0],
+  hoursStudied: 0, masteryLevels: {}, completedModules: [], passedQuizzes: [],
+  completedLabs: [], completedChallenges: [], notes: [], mistakes: [], resourceRatings: {},
+  viewedResources: [], unlockedAchievements: [], quizAttempts: {},
+  goals: { dailyMinutes: 30, dailyCompleted: false, weeklyModules: 2, weeklyCompleted: false },
   primaryObjective: 'Convertirme en profesional de ciberseguridad.',
   secondaryObjective: 'Especializarme en Blue Team & SOC.'
 };
 
-class StorageManager {
-  constructor() {
-    this.data = this.loadData();
-    this.checkStreak();
-  }
+function cloneDefaultState() { return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
+function isObject(v) { return v !== null && typeof v === 'object' && !Array.isArray(v); }
+function asArray(v) { return Array.isArray(v) ? v : []; }
+function asNumber(v, fallback) { return Number.isFinite(Number(v)) ? Number(v) : fallback; }
 
+function sanitizeState(input) {
+  const d = cloneDefaultState();
+  if (!isObject(input)) return d;
+  d.xp = Math.max(0, asNumber(input.xp, 0));
+  d.level = Math.max(1, Math.floor(asNumber(input.level, 1)));
+  d.streak = Math.max(1, Math.floor(asNumber(input.streak, 1)));
+  d.lastActiveDate = typeof input.lastActiveDate === 'string' ? input.lastActiveDate : d.lastActiveDate;
+  d.hoursStudied = Math.max(0, asNumber(input.hoursStudied, 0));
+  d.masteryLevels = isObject(input.masteryLevels) ? input.masteryLevels : {};
+  ['completedModules','passedQuizzes','completedLabs','completedChallenges','notes','mistakes','unlockedAchievements','viewedResources'].forEach(k => d[k] = asArray(input[k]));
+  d.resourceRatings = isObject(input.resourceRatings) ? input.resourceRatings : {};
+  d.quizAttempts = isObject(input.quizAttempts) ? input.quizAttempts : {};
+  d.goals = isObject(input.goals) ? { ...d.goals, ...input.goals } : d.goals;
+  if (typeof input.primaryObjective === 'string') d.primaryObjective = input.primaryObjective.slice(0, 500);
+  if (typeof input.secondaryObjective === 'string') d.secondaryObjective = input.secondaryObjective.slice(0, 500);
+  return d;
+}
+
+class StorageManager {
+  constructor() { this.data = this.loadData(); this.checkStreak(); }
   loadData() {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) {
-        this.saveData(DEFAULT_STATE);
-        return { ...DEFAULT_STATE };
-      }
-      return { ...DEFAULT_STATE, ...JSON.parse(stored) };
-    } catch (e) {
-      console.error('Error al cargar LocalStorage:', e);
-      return { ...DEFAULT_STATE };
-    }
+      const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('cyberlab_user_data_v1');
+      const data = stored ? sanitizeState(JSON.parse(stored)) : cloneDefaultState();
+      this.saveData(data, false);
+      return data;
+    } catch (e) { console.error('Error al cargar LocalStorage:', e); return cloneDefaultState(); }
   }
-
-  saveData(data = this.data) {
-    try {
-      this.data = data;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      window.dispatchEvent(new CustomEvent('cyberlab_state_updated', { detail: this.data }));
-    } catch (e) {
-      console.error('Error al guardar en LocalStorage:', e);
-    }
+  saveData(data = this.data, emit = true) {
+    this.data = sanitizeState(data);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) { console.error('Error al guardar:', e); }
+    if (emit) window.dispatchEvent(new CustomEvent('cyberlab_state_updated', { detail: this.data }));
   }
-
   checkStreak() {
     const today = new Date().toISOString().split('T')[0];
-    const lastDate = this.data.lastActiveDate;
-
-    if (!lastDate) {
-      this.data.lastActiveDate = today;
-      this.data.streak = 1;
-      this.saveData();
-      return;
-    }
-
-    const todayObj = new Date(today);
-    const lastObj = new Date(lastDate);
-    const diffTime = Math.abs(todayObj - lastObj);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) {
-      this.data.streak += 1;
-      this.data.lastActiveDate = today;
-      this.saveData();
-    } else if (diffDays > 1) {
-      this.data.streak = 1;
-      this.data.lastActiveDate = today;
-      this.saveData();
-    }
+    const last = this.data.lastActiveDate;
+    if (!last || last === today) return;
+    const diff = Math.round((Date.parse(today) - Date.parse(last)) / 86400000);
+    this.data.streak = diff === 1 ? this.data.streak + 1 : 1;
+    this.data.lastActiveDate = today;
+    this.saveData();
   }
-
   exportBackup() {
-    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(this.data, null, 2))}`;
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', jsonString);
-    downloadAnchor.setAttribute('download', `cyberlab_backup_${new Date().toISOString().split('T')[0]}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    const payload = { schemaVersion: 2, exportedAt: new Date().toISOString(), data: this.data };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob); const a = document.createElement('a');
+    a.href = url; a.download = `cyberlab_backup_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   }
-
   importBackup(jsonText) {
     try {
       const parsed = JSON.parse(jsonText);
-      if (parsed && typeof parsed === 'object') {
-        this.saveData({ ...DEFAULT_STATE, ...parsed });
-        alert('¡Progreso importado con éxito!');
-        window.location.reload();
-      } else {
-        alert('Archivo de copia de seguridad no válido.');
-      }
-    } catch (e) {
-      alert('Error al leer el archivo JSON.');
-    }
-  }
-
-  resetAllData() {
-    if (confirm('¿Estás seguro de que deseas reiniciar todo tu progreso? Esta acción no se puede deshacer.')) {
-      localStorage.removeItem(STORAGE_KEY);
+      const candidate = isObject(parsed) && isObject(parsed.data) ? parsed.data : parsed;
+      if (!isObject(candidate)) throw new Error('Formato inválido');
+      const sanitized = sanitizeState(candidate);
+      this.saveData(sanitized);
+      alert('¡Progreso importado y validado con éxito!');
       window.location.reload();
+    } catch (e) { console.error(e); alert('La copia no es válida o está dañada.'); }
+  }
+  resetAllData() {
+    if (confirm('¿Estás seguro de que deseas reiniciar todo tu progreso?')) {
+      localStorage.removeItem(STORAGE_KEY); localStorage.removeItem('cyberlab_user_data_v1'); window.location.reload();
     }
   }
 }
-
 window.CyberStorage = new StorageManager();
+window.CyberLabReviewIntervals = REVIEW_INTERVALS;
