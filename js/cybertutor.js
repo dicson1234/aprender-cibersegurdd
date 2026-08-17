@@ -54,6 +54,7 @@ class CyberTutorEngine {
       xp:d.xp||0,
       streak:d.streak||0,
       hoursStudied:d.hoursStudied||0,
+      currentModule:d.currentModule||d.currentTopic||'',
       mastery:d.masteryLevels||{},
       mistakes:(d.mistakes||[]).slice(-20),
       completedModules:(d.completedModules||[]).slice(-30),

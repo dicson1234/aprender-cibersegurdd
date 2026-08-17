@@ -1,0 +1,9 @@
+{
+  "$schema": "https://unpkg.com/wrangler@latest/config-schema.json",
+  "name": "cyberla-cybertutor",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-17",
+  "secrets": {
+    "required": ["GEMINI_API_KEY"]
+  }
+}
