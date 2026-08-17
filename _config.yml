@@ -1,0 +1,9 @@
+include:
+  - .nojekyll
+exclude:
+  - android
+  - node_modules
+  - .github
+  - package.json
+  - package-lock.json
+  - capacitor.config.json
