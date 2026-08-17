@@ -1,0 +1,7 @@
+name = "cyberlab-cybertutor"
+main = "cybertutor-gladia.js"
+compatibility_date = "2026-08-17"
+
+[vars]
+# Keep secrets out of this file. Configure with:
+# wrangler secret put GLADIA_API_KEY
