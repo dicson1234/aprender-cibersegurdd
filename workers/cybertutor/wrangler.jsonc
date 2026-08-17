@@ -1,6 +1,12 @@
 {
-  "$schema": "https://unpkg.com/wrangler@latest/config-schema.json",
-  "name": "cyberla-cybertutor",
-  "main": "src/index.js",
-  "compatibility_date": "2026-08-17"
+	"$schema": "https://unpkg.com/wrangler@latest/config-schema.json",
+	"name": "cyberla-cybertutor",
+	"main": "src/index.js",
+	"compatibility_date": "2026-08-17",
+	"kv_namespaces": [
+		{
+			"binding": "CYBERLAB_KV",
+			"id": "6a1a85810e674921a1b12500c8ffc458"
+		}
+	]
 }

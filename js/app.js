@@ -81,6 +81,17 @@ class CyberLabApp {
     document.querySelectorAll('.stat-xp-val').forEach(el => el.textContent = data.xp.toLocaleString());
     document.querySelectorAll('.stat-level-val').forEach(el => el.textContent = data.level);
     document.querySelectorAll('.stat-streak-val').forEach(el => el.textContent = `${data.streak} d`);
+
+    const account = window.CyberAccounts?.getActive();
+    if (account) {
+      const userBox = document.getElementById('header-user-profile-badge');
+      if (userBox) {
+        const avatarSrc = (account.avatar && (account.avatar.startsWith('data:') || account.avatar.startsWith('http')))
+          ? `<img src="${account.avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1px solid var(--accent-cyan)">`
+          : `<span style="font-size:1.1rem">${account.avatar || '👤'}</span>`;
+        userBox.innerHTML = `${avatarSrc} <span style="font-weight:700;font-size:0.85rem">${account.username}</span>`;
+      }
+    }
   }
 
   onViewChange(viewName) {
