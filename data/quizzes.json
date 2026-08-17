@@ -1,0 +1,357 @@
+[
+  {
+    "id": "q-01",
+    "moduleId": "mod-01",
+    "category": "Fundamentos",
+    "difficulty": "Básica",
+    "question": "¿Qué pilar de la Tríada CIA se vulnera cuando un atacante realiza un ataque DDoS que satura un servidor web y lo deja inalcanzable?",
+    "options": ["Confidencialidad", "Integridad", "Disponibilidad", "No Repudio"],
+    "answer": 2,
+    "explanation": "Los ataques DDoS saturan la capacidad de procesamiento o ancho de banda del servidor, impidiendo que los usuarios autorizados accedan al servicio, afectando directamente la Disponibilidad."
+  },
+  {
+    "id": "q-02",
+    "moduleId": "mod-01",
+    "category": "Fundamentos",
+    "difficulty": "Básica",
+    "question": "En el modelo de análisis de seguridad, ¿cuál es la fórmula conceptual del Riesgo?",
+    "options": [
+      "Riesgo = Amenaza + Vulnerabilidad",
+      "Riesgo = Amenaza × Vulnerabilidad × Impacto",
+      "Riesgo = Exploit / Amenaza",
+      "Riesgo = Vulnerabilidad × Contraseña"
+    ],
+    "answer": 1,
+    "explanation": "El Riesgo es el producto de la probabilidad de que una amenaza aproveche una vulnerabilidad multiplicada por el impacto económico u operativo que causaría."
+  },
+  {
+    "id": "q-03",
+    "moduleId": "mod-01",
+    "category": "Fundamentos",
+    "difficulty": "Intermedia",
+    "question": "Un atacante modifica de forma no autorizada un valor en la base de datos de saldos bancarios. ¿Qué elemento de la Tríada CIA fue alterado?",
+    "options": ["Confidencialidad", "Integridad", "Disponibilidad", "Autenticación"],
+    "answer": 1,
+    "explanation": "La Integridad garantiza que la información se mantenga exacta y no sea modificada ni corrompida por entes no autorizados."
+  },
+  {
+    "id": "q-04",
+    "moduleId": "mod-02",
+    "category": "Informática",
+    "difficulty": "Básica",
+    "question": "¿Cuál es la función del registro de procesador EIP (en x86) o RIP (en x64)?",
+    "options": [
+      "Almacenar el resultado de la última operación aritmética",
+      "Apuntar a la siguiente instrucción a ser ejecutada en la memoria",
+      "Guardar el puntero de la pila (Stack Pointer)",
+      "Controlar la temperatura de la CPU"
+    ],
+    "answer": 1,
+    "explanation": "El Instruction Pointer (EIP/RIP) contiene la dirección de memoria de la siguiente instrucción que el procesador debe decodificar y ejecutar."
+  },
+  {
+    "id": "q-05",
+    "moduleId": "mod-02",
+    "category": "Informática",
+    "difficulty": "Intermedia",
+    "question": "¿Qué tecnología a nivel de hardware/OS evita que un procesador ejecute código ubicado en regiones de memoria marcadas solo para datos (como el Stack)?",
+    "options": ["ASLR", "DEP / NX Bit", "ECC RAM", "RAID 5"],
+    "answer": 1,
+    "explanation": "DEP (Data Execution Prevention) o el bit NX (No-Execute) marca ciertas regiones de memoria como no ejecutables para mitigar vulnerabilidades de desbordamiento de búfer (Buffer Overflow)."
+  },
+  {
+    "id": "q-06",
+    "moduleId": "mod-03",
+    "category": "Sistemas",
+    "difficulty": "Intermedia",
+    "question": "¿En qué nivel de privilegio (Ring) del procesador se ejecuta el Kernel del Sistema Operativo?",
+    "options": ["Ring 3", "Ring 1", "Ring 0", "Ring 7"],
+    "answer": 2,
+    "explanation": "Ring 0 representa el modo Kernel con máxima autoridad y acceso directo al hardware físico de la máquina."
+  },
+  {
+    "id": "q-07",
+    "moduleId": "mod-03",
+    "category": "Sistemas",
+    "difficulty": "Básica",
+    "question": "¿Cómo se le llama al mecanismo mediante el cual un programa de usuario solicita un servicio al Kernel del sistema operativo?",
+    "options": ["Interrupt Service", "System Call (Syscall)", "Socket Bind", "User Trap"],
+    "answer": 1,
+    "explanation": "Las System Calls son la interfaz estandarizada mediante la cual las aplicaciones en Userland solicitan operaciones privilegiadas al Kernel."
+  },
+  {
+    "id": "q-08",
+    "moduleId": "mod-04",
+    "category": "Linux",
+    "difficulty": "Básica",
+    "question": "En permisos de Linux, ¿qué valor octal representa el permiso de Lectura (r), Escritura (w) y Ejecución (x) completo?",
+    "options": ["5", "6", "7", "4"],
+    "answer": 2,
+    "explanation": "Lectura = 4, Escritura = 2, Ejecución = 1. La suma 4 + 2 + 1 = 7 representa el acceso completo (rwx)."
+  },
+  {
+    "id": "q-09",
+    "moduleId": "mod-04",
+    "category": "Linux",
+    "difficulty": "Intermedia",
+    "question": "¿Qué comando de Linux te permite buscar todos los archivos en el sistema que tengan activado el bit SUID?",
+    "options": [
+      "find / -perm -4000 2>/dev/null",
+      "ls -la / --suid",
+      "grep -r 'suid' /etc/",
+      "chmod +s /"
+    ],
+    "answer": 0,
+    "explanation": "`find / -perm -4000` busca en todo el sistema los archivos con el bit SUID activo (permiso de ejecución con privilegios del propietario del archivo)."
+  },
+  {
+    "id": "q-10",
+    "moduleId": "mod-04",
+    "category": "Linux",
+    "difficulty": "Básica",
+    "question": "¿En qué archivo de Linux se almacenan los hashes de las contraseñas de los usuarios del sistema?",
+    "options": ["/etc/passwd", "/etc/shadow", "/etc/security", "/var/log/auth.log"],
+    "answer": 1,
+    "explanation": "El archivo `/etc/shadow` contiene los hashes de contraseñas y parámetros de expiración de credenciales, accesible exclusivamente por root."
+  },
+  {
+    "id": "q-11",
+    "moduleId": "mod-05",
+    "category": "Windows",
+    "difficulty": "Intermedia",
+    "question": "Un atacante busca lograr persistencia en Windows agregando una clave en el Registro. ¿Cuál de las siguientes colmenas se refiere a la configuración específica del usuario en sesión?",
+    "options": ["HKLM (HKEY_LOCAL_MACHINE)", "HKCU (HKEY_CURRENT_USER)", "HKCR (HKEY_CLASSES_ROOT)", "HKCC (HKEY_CURRENT_CONFIG)"],
+    "answer": 1,
+    "explanation": "HKCU almacena la configuración y perfiles del usuario que tiene iniciada la sesión actualmente en la máquina."
+  },
+  {
+    "id": "q-12",
+    "moduleId": "mod-05",
+    "category": "Windows",
+    "difficulty": "Básica",
+    "question": "¿Qué herramienta nativa de Windows se utiliza para auditar e inspeccionar los eventos de seguridad y registros del sistema?",
+    "options": ["Event Viewer (eventvwr.msc)", "Registry Editor (regedit)", "Task Manager", "Disk Management"],
+    "answer": 0,
+    "explanation": "El Visor de Eventos (Event Viewer) permite consultar los logs de aplicación, seguridad, sistema y registros detallados como Sysmon."
+  },
+  {
+    "id": "q-13",
+    "moduleId": "mod-06",
+    "category": "Redes",
+    "difficulty": "Básica",
+    "question": "¿Cuál es la secuencia correcta de banderas en el handshake de 3 vías de TCP para establecer una conexión?",
+    "options": ["ACK → SYN → SYN-ACK", "SYN → SYN-ACK → ACK", "SYN → ACK → FIN", "CONNECT → ACCEPT → OK"],
+    "answer": 1,
+    "explanation": "El protocolo TCP establece conexiones seguras enviando un SYN desde el cliente, un SYN-ACK desde el servidor y finalmente un ACK desde el cliente."
+  },
+  {
+    "id": "q-14",
+    "moduleId": "mod-06",
+    "category": "Redes",
+    "difficulty": "Intermedia",
+    "question": "¿Cuántas direcciones IP utilizables para hosts ofrece una subred con máscara `/28`?",
+    "options": ["16", "14", "30", "64"],
+    "answer": 1,
+    "explanation": "Un `/28` asigna 4 bits para hosts (2^4 = 16 direcciones totales). Descontando la dirección de Red y la de Broadcast, quedan 14 IPs utilizables."
+  },
+  {
+    "id": "q-15",
+    "moduleId": "mod-06",
+    "category": "Redes",
+    "difficulty": "Intermedia",
+    "question": "¿Qué protocolo se encarga de resolver una dirección IP conocida a su correspondiente dirección MAC física en una red local?",
+    "options": ["DNS", "DHCP", "ARP", "ICMP"],
+    "answer": 2,
+    "explanation": "ARP (Address Resolution Protocol) mapea direcciones de capa de red (IP) a direcciones de capa de enlace de datos (MAC) dentro de la misma subred local."
+  },
+  {
+    "id": "q-16",
+    "moduleId": "mod-07",
+    "category": "Internet",
+    "difficulty": "Básica",
+    "question": "¿En qué puerto estándar escucha de forma predeterminada un servidor web un tráfico cifrado HTTPS?",
+    "options": ["80", "8080", "443", "22"],
+    "answer": 2,
+    "explanation": "El puerto 443 es el puerto estándar estandarizado para las comunicaciones cifradas mediante HTTPS (HTTP sobre TLS/SSL)."
+  },
+  {
+    "id": "q-17",
+    "moduleId": "mod-07",
+    "category": "Internet",
+    "difficulty": "Avanzada",
+    "question": "En el protocolo DNS, ¿qué tipo de registro mapea un nombre de dominio a una dirección IPv4?",
+    "options": ["Registro AAAA", "Registro A", "Registro MX", "Registro TXT"],
+    "answer": 1,
+    "explanation": "El Registro A asigna un nombre de dominio a una dirección IPv4 de 32 bits (mientras que el AAAA asigna IPv6)."
+  },
+  {
+    "id": "q-18",
+    "moduleId": "mod-08",
+    "category": "Programación",
+    "difficulty": "Intermedia",
+    "question": "En un script de Python enfocado a ciberseguridad, ¿qué librería estándar se utiliza para crear sockets TCP/UDP y establecer conexiones de red?",
+    "options": ["requests", "socket", "sys", "re"],
+    "answer": 1,
+    "explanation": "La librería `socket` proporciona acceso directo a la interfaz de conectividad de red del sistema operativo."
+  },
+  {
+    "id": "q-19",
+    "moduleId": "mod-09",
+    "category": "Seguridad",
+    "difficulty": "Básica",
+    "question": "¿Qué significa el concepto de 'Superficie de Ataque' en bastionado de sistemas (Hardening)?",
+    "options": [
+      "El número de monitores conectados al servidor",
+      "La suma de todos los puntos de entrada expuestos donde un atacante podría intentar vulnerar el sistema",
+      "El ancho de banda total de la tarjeta de red",
+      "El tamaño en disco del sistema operativo"
+    ],
+    "answer": 1,
+    "explanation": "La superficie de ataque abarca todos los puertos abiertos, servicios activos, aplicaciones expuestas y cuentas de usuario que representan vectores potenciales de explotación."
+  },
+  {
+    "id": "q-20",
+    "moduleId": "mod-09",
+    "category": "Seguridad",
+    "difficulty": "Intermedia",
+    "question": "¿Cuál es la diferencia entre autenticación y autorización?",
+    "options": [
+      "Autenticación verifica QUIÉN eres; Autorización determina QUÉ tienes permitido hacer",
+      "Autenticación encripta archivos; Autorización los borra",
+      "Autenticación es para redes; Autorización es para procesadores",
+      "Son exactamente lo mismo"
+    ],
+    "answer": 0,
+    "explanation": "Autenticación valida la identidad (ej. ingresar tu contraseña e OTP), mientras que Autorización verifica si esa identidad posee permisos para acceder a un recurso determinado."
+  },
+  {
+    "id": "q-21",
+    "moduleId": "mod-10",
+    "category": "Laboratorios",
+    "difficulty": "Intermedia",
+    "question": "Durante un análisis de capturas de tráfico con Wireshark, ¿qué filtro te permite mostrar únicamente peticiones HTTP de tipo POST?",
+    "options": ["http.post", "http.request.method == 'POST'", "tcp.port == 80 && post", "ip.src == post"],
+    "answer": 1,
+    "explanation": "El filtro de despliegue `http.request.method == 'POST'` aísla las peticiones donde se envían datos hacia el servidor web."
+  },
+  {
+    "id": "q-22",
+    "moduleId": "mod-01",
+    "category": "Fundamentos",
+    "difficulty": "Avanzada",
+    "question": "¿Qué es un indicador de compromiso (IOC - Indicator of Compromise)?",
+    "options": [
+      "Un documento legal que firma un auditor",
+      "Un artefacto forense observatorio en la red o sistema que indica una intrusión con alta probabilidad",
+      "Un parche emitido por Microsoft",
+      "La velocidad de procesamiento del procesador"
+    ],
+    "answer": 1,
+    "explanation": "Un IOC es una evidencia forense (hash de malware, dirección IP maliciosa, regla de registro) que demuestra la presencia de una amenaza en un sistema."
+  },
+  {
+    "id": "q-23",
+    "moduleId": "mod-06",
+    "category": "Redes",
+    "difficulty": "Avanzada",
+    "question": "¿Cuál es la función del campo TTL (Time to Live) en la cabecera del protocolo IP?",
+    "options": [
+      "Indicar la hora exacta de creación del paquete",
+      "Evitar que los paquetes circulen indefinidamente en la red reduciéndose en 1 en cada salto de router",
+      "Calcular la velocidad de conexión en Mbps",
+      "Cifrar el contenido del paquete"
+    ],
+    "answer": 1,
+    "explanation": "El TTL es un contador que se decrementa en 1 por cada router transitado. Si llega a 0, el paquete se descarta enviando un mensaje ICMP Time Exceeded."
+  },
+  {
+    "id": "q-24",
+    "moduleId": "mod-04",
+    "category": "Linux",
+    "difficulty": "Avanzada",
+    "question": "¿Qué efecto produce otorgar el permiso especial `SUID` (chmod u+s) a un archivo ejecutable en Linux?",
+    "options": [
+      "Hace que el archivo se borre automáticamente tras ejecutarse",
+      "Permite que el ejecutable se corra con los privilegios del usuario propietario del archivo, no del usuario que lo ejecuta",
+      "Cifra el código ejecutable para evitar ingeniería inversa",
+      "Bloquea el acceso al archivo en red"
+    ],
+    "answer": 1,
+    "explanation": "El bit SUID hace que el binario se ejecute con los permisos de su dueño (si el dueño es root, se ejecutará con privilegios administrativos)."
+  },
+  {
+    "id": "q-25",
+    "moduleId": "mod-07",
+    "category": "Internet",
+    "difficulty": "Intermedia",
+    "question": "¿Qué vulnerabilidad aprovecha un atacante mediante la suplantación de respuesta DNS para redirigir a una víctima a una página de phishing?",
+    "options": ["SQL Injection", "DNS Cache Poisoning (Envenenamiento de DNS)", "Buffer Overflow", "Cross-Site Scripting"],
+    "answer": 1,
+    "explanation": "El envenenamiento de caché DNS inyecta direcciones IP falsas en las tablas del resolver DNS para desviar a los usuarios a servidores maliciosos."
+  },
+  {
+    "id": "q-26",
+    "moduleId": "mod-05",
+    "category": "Windows",
+    "difficulty": "Experta",
+    "question": "¿Qué ID de evento en el registro de auditoría de Windows representa la creación de un nuevo proceso (Process Creation)?",
+    "options": ["Event ID 4624", "Event ID 4688", "Event ID 1102", "Event ID 4720"],
+    "answer": 1,
+    "explanation": "El Event ID 4688 en el log de auditoría de seguridad de Windows registra cada vez que un proceso es creado en el sistema."
+  },
+  {
+    "id": "q-27",
+    "moduleId": "mod-08",
+    "category": "Programación",
+    "difficulty": "Avanzada",
+    "question": "¿Qué diferencia existe entre un ataque de 'Port Scanning' de tipo SYN (Half-Open) y un escaneo TCP Connect completo?",
+    "options": [
+      "SYN scan no completa el 3-Way Handshake (envía RST tras recibir SYN-ACK), siendo más rápido y menos propenso a registrarse en aplicación",
+      "TCP Connect no requiere paquetes IP",
+      "SYN Scan solo funciona en Windows",
+      "Son exactamente idénticos"
+    ],
+    "answer": 0,
+    "explanation": "El SYN scan de media apertura interrumpe la conexión inmediatamente enviando un RST al recibir SYN-ACK, sin finalizar la conexión de capa 7."
+  },
+  {
+    "id": "q-28",
+    "moduleId": "mod-09",
+    "category": "Seguridad",
+    "difficulty": "Avanzada",
+    "question": "¿Qué es una función Hash criptográfica (como SHA-256) y qué propiedad clave posee?",
+    "options": [
+      "Es un algoritmo reversible para comprimir texto",
+      "Es una función unidireccional que convierte una entrada de cualquier tamaño en una salida de tamaño fijo, siendo computacionalmente inviable revertirla",
+      "Es una clave privada para cifrado asimétrico",
+      "Es un protocolo de enrutamiento"
+    ],
+    "answer": 1,
+    "explanation": "Las funciones hash son deterministas y unidireccionales: cualquier cambio mínimo en la entrada altera drásticamente el resultado (efecto avalancha) y no se pueden revertir."
+  },
+  {
+    "id": "q-29",
+    "moduleId": "mod-10",
+    "category": "Laboratorios",
+    "difficulty": "Experta",
+    "question": "Al investigar un incidente forense en memoria RAM de Windows, ¿qué herramienta de código abierto se utiliza ampliamente para extraer estructuras de procesos, hilos y conexiones?",
+    "options": ["Nmap", "Volatility Framework", "Wireshark", "Metasploit"],
+    "answer": 1,
+    "explanation": "Volatility es la suite estándar de la industria para el análisis forense avanzado de volcado de memoria (RAM dumps)."
+  },
+  {
+    "id": "q-30",
+    "moduleId": "mod-06",
+    "category": "Redes",
+    "difficulty": "Experta",
+    "question": "¿Qué mecanismo utiliza ICMP Redirect y por qué representa un riesgo potencial en redes locales sin controles?",
+    "options": [
+      "Asigna IPs dinámicas a clientes",
+      "Notifica a un host sobre una mejor ruta para un destino; si es falsificado por un atacante, permite realizar ataques Man-in-the-Middle (MitM)",
+      "Cifra el tráfico entre switches",
+      "Realiza backups de la tabla de enrutamiento"
+    ],
+    "answer": 1,
+    "explanation": "Si un atacante envía mensajes ICMP Redirect falsos, puede modificar la tabla de enrutamiento del host víctima para canalizar su tráfico por su propia máquina."
+  }
+]

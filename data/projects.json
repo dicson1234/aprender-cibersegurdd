@@ -1,0 +1,74 @@
+[
+  {
+    "id": "proj-01",
+    "title": "Proyecto 1: Herramienta CLI Sencilla en Python",
+    "level": "Principiante",
+    "category": "Programación",
+    "description": "Desarrollar una aplicación de consola en Python que permita consultar la reputación de una IP u obtener el hash MD5/SHA256 de cualquier archivo ingresado.",
+    "skills": ["Python", "Manejo de archivos", "Librería hashlib", "Argumentos CLI"],
+    "deliverable": "Script `.py` documentado que acepte argumentos por línea de comandos y genere un reporte en consola."
+  },
+  {
+    "id": "proj-02",
+    "title": "Proyecto 2: Analizador Básico de Logs (Log Parser)",
+    "level": "Principiante",
+    "category": "SOC & Blue Team",
+    "description": "Crear un script en Python o Bash que procese archivos de log `/var/log/auth.log` o registros de Nginx, identifique direcciones IP con más de 10 intentos fallidos de acceso y genere una lista negra de IPs.",
+    "skills": ["Expresiones Regulares (Regex)", "Parsing de Texto", "Log Analysis", "Bash/Python"],
+    "deliverable": "Script que reciba un archivo de log y devuelva una tabla resumen con IPs atacantes e intentos acumulados."
+  },
+  {
+    "id": "proj-03",
+    "title": "Proyecto 3: Escáner de Puertos Multihilo para Laboratorio",
+    "level": "Intermedio",
+    "category": "Redes & Pentesting",
+    "description": "Construir un escáner de puertos rápido en Python utilizando hilos (Threading) para verificar el estado de los puertos 1-1024 en hosts de laboratorio autorizado.",
+    "skills": ["Sockets TCP", "Multithreading", "Manejo de timeouts", "Estructuras de datos"],
+    "deliverable": "Herramienta funcional que reporte servicios activos y banners de respuesta."
+  },
+  {
+    "id": "proj-04",
+    "title": "Proyecto 4: Monitor de Red Local y Alerta ARP Spoofing",
+    "level": "Intermedio",
+    "category": "Seguridad de Redes",
+    "description": "Desarrollar un script con Scapy o sockets que inspeccione las tablas ARP locales y alerte en pantalla si detecta cambios de dirección MAC asociados a la IP del Gateway por envenenamiento ARP.",
+    "skills": ["Scapy", "Inspección de capas de red", "Protocolo ARP", "Alertamiento"],
+    "deliverable": "Script monitor de red en tiempo real que emita un aviso cuando cambie la MAC por defecto."
+  },
+  {
+    "id": "proj-05",
+    "title": "Proyecto 5: Sistema de Detección de Intrusos (IDS) Ligero",
+    "level": "Avanzado",
+    "category": "Blue Team & SOC",
+    "description": "Crear un pequeño agente IDS en Python que lea eventos en vivo de la red o sistema de archivos y dispare alertas según un archivo de reglas YAML/JSON personalizado.",
+    "skills": ["Diseño de Reglas de Detección", "YAML/JSON parsing", "Monitoreo en tiempo real", "Logging"],
+    "deliverable": "Motor IDS liviano ejecutable en segundo plano con consola de eventos."
+  },
+  {
+    "id": "proj-06",
+    "title": "Proyecto 6: Mini SIEM Educativo con Interfaz Web",
+    "level": "Avanzado",
+    "category": "SOC & SIEM",
+    "description": "Desplegar un panel web interactivo sencillo (usando Flask/FastAPI o HTML/JS local) que ingiera logs de prueba, clasifique severidades e identifique correlaciones de eventos.",
+    "skills": ["Dashboarding", "Correlación de eventos", "APIs REST", "Visualización de datos"],
+    "deliverable": "Mini SIEM funcional capaz de mostrar gráficos de eventos y filtrar por severidad."
+  },
+  {
+    "id": "proj-07",
+    "title": "Proyecto 7: Laboratorio Virtual de Active Directory",
+    "level": "Avanzado",
+    "category": "Active Directory",
+    "description": "Configurar una infraestructura de laboratorio en VirtualBox/VMware compuesta por un Windows Server (Controlador de Dominio), dos clientes Windows 11 y un Linux de auditoría.",
+    "skills": ["Active Directory", "DNS de dominio", "GPOs", "Kerberos", "Virtualización"],
+    "deliverable": "Documentación paso a paso de la topología de red, usuarios creados y políticas de seguridad aplicadas."
+  },
+  {
+    "id": "proj-08",
+    "title": "Proyecto 8: Entorno de Análisis de Malware Aislado (Sandbox)",
+    "level": "Experto",
+    "category": "Malware & Forense",
+    "description": "Diseñar y desplegar una máquina virtual Windows 'Air-Gapped' (sin salida a red exterior) equipada con Procmon, Wireshark, x64dbg y Fakenet-NG para analizar comportamiento de ejecutable de prueba seguro.",
+    "skills": ["Aislamiento de hypervisor", "Forense en caliente", "Monitoreo de red/disco", "Sandboxing"],
+    "deliverable": "Informe ejecutivo de análisis forense dynamic y estático simulado."
+  }
+]

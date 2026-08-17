@@ -1,0 +1,229 @@
+[
+  {
+    "id": "lab-001",
+    "number": "Lab 001",
+    "title": "Análisis de Tráfico de Red con Wireshark / tcpdump",
+    "category": "Redes & Análisis",
+    "difficulty": "Principiante",
+    "xp": 150,
+    "objective": "Aprender a capturar y analizar paquetes de red en un entorno de laboratorio simulado para identificar la estructura del Handshake TCP y credenciales transmitidas en texto claro.",
+    "prerequisites": ["mod-06", "mod-07"],
+    "preparation": "Este laboratorio se realiza en un entorno virtual aislado utilizando herramientas estándar de captura. No requiere acceso a internet exterior.",
+    "steps": [
+      {
+        "step": 1,
+        "title": "Inicialización de la Captura de Red",
+        "command": "sudo tcpdump -i eth0 -w laboratorio_red.pcap",
+        "description": "Inicia una captura de tráfico completa en el adaptador virtual `eth0` y guarda los paquetes en el archivo binario `laboratorio_red.pcap`."
+      },
+      {
+        "step": 2,
+        "title": "Generación de Tráfico de Prueba",
+        "command": "curl -X POST -d 'user=admin&pass=Secret123' http://127.0.0.1:8080/login",
+        "description": "Simula el envío de un formulario de inicio de sesión no cifrado (HTTP) hacia un servidor local en el puerto 8080."
+      },
+      {
+        "step": 3,
+        "title": "Filtrado de Paquetes en Wireshark",
+        "command": "http.request.method == 'POST'",
+        "description": "Abre el archivo `laboratorio_red.pcap` en Wireshark y aplica el filtro para aislar la petición HTTP POST enviada."
+      },
+      {
+        "step": 4,
+        "title": "Inspección de Carga Útil (Payload)",
+        "command": "Follow -> TCP Stream",
+        "description": "Haz clic derecho sobre el paquete filtrado y selecciona 'Follow TCP Stream' para reconstruir la conversación completa entre cliente y servidor."
+      }
+    ],
+    "questions": [
+      {
+        "id": "l1-q1",
+        "question": "¿En qué campo de la cabecera HTTP se observan las credenciales enviadas?",
+        "options": ["En las cabeceras HTTP Server", "En el cuerpo de la petición (HTML Form Data)", "En la dirección MAC de origen", "En el parámetro TTL"],
+        "answer": 1
+      },
+      {
+        "id": "l1-q2",
+        "question": "¿Por qué fue posible leer la contraseña 'Secret123' directamente en la captura?",
+        "options": [
+          "Porque Wireshark la desencriptó automáticamente",
+          "Porque el protocolo HTTP transmite datos en texto claro sin cifrado TLS",
+          "Porque el puerto 8080 es siempre cifrado",
+          "Porque se utilizó una dirección IP privada"
+        ],
+        "answer": 1
+      }
+    ],
+    "solution": "La captura revela que la transmisión de datos sensibles mediante HTTP plano expone credenciales a cualquier observador en la red (Man-in-the-Middle).",
+    "mitigation": "Migrar todos los servicios web a HTTPS imponiendo TLS 1.3 y configurar cabeceras HSTS para forzar conexiones cifradas."
+  },
+  {
+    "id": "lab-002",
+    "number": "Lab 002",
+    "title": "Hardening y Permisos en Servidores Linux",
+    "category": "Linux & Hardening",
+    "difficulty": "Principiante",
+    "xp": 160,
+    "objective": "Auditar la configuración de archivos críticos del sistema en Linux, detectar permisos peligrosos y aplicar el principio de mínimo privilegio.",
+    "prerequisites": ["mod-04"],
+    "preparation": "Entorno virtual Linux con usuario no privilegiado y acceso a `sudo`.",
+    "steps": [
+      {
+        "step": 1,
+        "title": "Auditoría de Archivos Sensibles",
+        "command": "ls -l /etc/passwd /etc/shadow",
+        "description": "Verifica los permisos actuales de los archivos de cuentas de usuario y hashes de contraseñas."
+      },
+      {
+        "step": 2,
+        "title": "Búsqueda de Binarios SUID Peligrosos",
+        "command": "find / -perm -4000 2>/dev/null",
+        "description": "Escanea el sistema de archivos buscando binarios ejecutables que posean el bit SUID activo."
+      },
+      {
+        "step": 3,
+        "title": "Corrección de Permisos Inseguros",
+        "command": "sudo chmod 640 /etc/shadow && sudo chown root:shadow /etc/shadow",
+        "description": "Aplica los permisos restrictivos correctos (`rw-r-----`) propiedad de `root:shadow`."
+      },
+      {
+        "step": 4,
+        "title": "Verificación de Auditoría",
+        "command": "ls -l /etc/shadow",
+        "description": "Confirma que usuarios no autorizados no tienen acceso de lectura ni escritura al archivo `/etc/shadow`."
+      }
+    ],
+    "questions": [
+      {
+        "id": "l2-q1",
+        "question": "¿Qué permisos numéricos corresponden a la configuración recomendada `rw-r-----` para `/etc/shadow`?",
+        "options": ["755", "640", "777", "600"],
+        "answer": 1
+      }
+    ],
+    "solution": "El bastionado exitoso del archivo `/etc/shadow` impidió la extracción no autorizada de hashes de contraseñas.",
+    "mitigation": "Establecer revisiones periódicas de integridad con AIDE o Tripwire y automatizar la comprobación de compliance."
+  },
+  {
+    "id": "lab-003",
+    "number": "Lab 003",
+    "title": "Análisis de Persistencia en el Registro de Windows",
+    "category": "Windows & Forense",
+    "difficulty": "Intermedio",
+    "xp": 180,
+    "objective": "Investigar claves del Registro de Windows utilizadas por malware para establecer persistencia y automatizar la limpieza segura.",
+    "prerequisites": ["mod-05"],
+    "preparation": "Entorno de pruebas Windows con PowerShell iniciado con permisos de Administrador.",
+    "steps": [
+      {
+        "step": 1,
+        "title": "Inspección de Claves de Inicio Automático",
+        "command": "Get-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'",
+        "description": "Consulta todas las entradas configuradas para ejecutarse al iniciar la sesión del usuario actual."
+      },
+      {
+        "step": 2,
+        "title": "Identificación de Entrada Anómala",
+        "command": "Get-ItemProperty -Path 'HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'",
+        "description": "Verifica si existen entradas sospechosas que apunten a carpetas temporales o de acceso público como `C:\\Users\\Public` o `C:\\Temp`."
+      },
+      {
+        "step": 3,
+        "title": "Eliminación del Valor Malicioso",
+        "command": "Remove-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name 'SuspiciousApp'",
+        "description": "Remueve la clave del registro identificada para neutralizar el mecanismo de persistencia."
+      }
+    ],
+    "questions": [
+      {
+        "id": "l3-q1",
+        "question": "¿Qué evento de Sysmon registra la creación o modificación de claves en el Registro de Windows?",
+        "options": ["Sysmon Event ID 1 (Process Create)", "Sysmon Event ID 13 (RegistryEvent)", "Sysmon Event ID 3 (Network Connection)", "Sysmon Event ID 7 (Image Loaded)"],
+        "answer": 1
+      }
+    ],
+    "solution": "Se detectó y eliminó exitosamente un valor de registro no autorizado sin afectar el funcionamiento del sistema operativo.",
+    "mitigation": "Implementar políticas AppLocker/WDAC y limitar los derechos de administración local."
+  },
+  {
+    "id": "lab-004",
+    "number": "Lab 004",
+    "title": "Creación de un Escáner de Puertos Sencillo en Python",
+    "category": "Programación & Pentesting",
+    "difficulty": "Intermedio",
+    "xp": 200,
+    "objective": "Desarrollar un script funcional en Python utilizando sockets para escanear y determinar el estado de puertos de red en localhost.",
+    "prerequisites": ["mod-08"],
+    "preparation": "Entorno local con Python 3 instalado.",
+    "steps": [
+      {
+        "step": 1,
+        "title": "Creación del Script Python `port_scanner.py`",
+        "command": "nano port_scanner.py",
+        "description": "Escribe el siguiente código de prueba seguro orientando a `127.0.0.1`:\\nimport socket\\n\\ntarget = '127.0.0.1'\\nports = [21, 22, 80, 443, 8080]\\n\\nfor port in ports:\\n    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\\n    s.settimeout(0.5)\\n    result = s.connect_ex((target, port))\\n    if result == 0:\\n        print(f'[+] Puerto {port}: ABIERTO')\\n    else:\\n        print(f'[-] Puerto {port}: CERRADO')\\n    s.close()"
+      },
+      {
+        "step": 2,
+        "title": "Ejecución del Escáner Local",
+        "command": "python3 port_scanner.py",
+        "description": "Ejecuta el script y analiza el resultado impreso en consola."
+      }
+    ],
+    "questions": [
+      {
+        "id": "l4-q1",
+        "question": "¿Qué valor retorna la función `socket.connect_ex()` cuando la conexión TCP se establece con éxito?",
+        "options": ["0", "1", "-1", "200"],
+        "answer": 0
+      }
+    ],
+    "solution": "El escáner en Python verificó satisfactoriamente la disponibilidad de puertos sin requerir librerías de terceros.",
+    "mitigation": "Configurar firewalls de host para rechazar escaneos no autorizados y deshabilitar servicios innecesarios."
+  },
+  {
+    "id": "lab-005",
+    "number": "Lab 005",
+    "title": "Identificación de Vulnerabilidad SQL Injection en Entorno de Prueba",
+    "category": "Seguridad Web",
+    "difficulty": "Avanzado",
+    "xp": 220,
+    "objective": "Comprender la dinámica de una Inyección SQL clásica (SQLi) en una aplicación web de laboratorio deliberadamente vulnerable (DVWA / OWASP Juice Shop) y aplicar sentencias preparadas para corregirla.",
+    "prerequisites": ["mod-07", "mod-09"],
+    "preparation": "Servidor web de laboratorio de prueba desplegado en localhost.",
+    "steps": [
+      {
+        "step": 1,
+        "title": "Identificación del Punto de Inyección",
+        "command": "user_id = ' OR '1'='1",
+        "description": "Ingresa la comilla simple `'` en el campo de búsqueda para forzar un error de sintaxis SQL y validar la falta de sanitización."
+      },
+      {
+        "step": 2,
+        "title": "Evitación de Autenticación",
+        "command": "SELECT * FROM users WHERE username = '' OR '1'='1' AND password = ''",
+        "description": "Observa cómo la condición `'1'='1'` evalúa siempre a verdadero devolviendo todos los registros de la tabla."
+      },
+      {
+        "step": 3,
+        "title": "Remediación con Sentencias Preparadas (Prepared Statements)",
+        "command": "cursor.execute('SELECT * FROM users WHERE username = %s AND password = %s', (user, pwd))",
+        "description": "Sustituye la concatenación directa de cadenas por consultas parametrizadas donde el motor de base de datos trata el input estrictamente como dato."
+      }
+    ],
+    "questions": [
+      {
+        "id": "l5-q1",
+        "question": "¿Cuál es la defensa primaria y más efectiva contra los ataques de inyección SQL?",
+        "options": [
+          "Cifrar el disco duro del servidor",
+          "Uso de Consultas Parametrizadas / Sentencias Preparadas (Prepared Statements)",
+          "Usar contraseñas más largas",
+          "Ocultar el puerto de la base de datos"
+        ],
+        "answer": 1
+      }
+    ],
+    "solution": "La implementación de consultas parametrizadas neutralizó completamente el vector de inyección SQL.",
+    "mitigation": "Adoptar ORMs seguros, aplicar WAF (Web Application Firewall) y realizar análisis SAST/DAST continuo."
+  }
+]

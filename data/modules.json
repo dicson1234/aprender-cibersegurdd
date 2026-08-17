@@ -1,0 +1,617 @@
+[
+  {
+    "id": "mod-01",
+    "stage": 0,
+    "title": "1. ¿Qué es la Ciberseguridad?",
+    "category": "Fundamentos",
+    "icon": "🛡️",
+    "description": "Comprende los pilares fundamentales de la seguridad de la información, el modelo de amenazas y la tríada CIA.",
+    "prerequisites": [],
+    "estimatedTime": "30 min",
+    "concepts": [
+      {
+        "id": "concept-cia",
+        "name": "Tríada CIA (Confidencialidad, Integridad y Disponibilidad)",
+        "summary": "El modelo fundamental para evaluar la seguridad de cualquier sistema de información.",
+        "theory": "La Tríada CIA es el modelo sobre el cual se construyen todas las políticas de seguridad. \n- **Confidencialidad**: Garantiza que la información solo sea accesible por personal o sistemas autorizados. (Ej: Cifrado de datos, control de acceso).\n- **Integridad**: Garantiza que la información no haya sido alterada, manipulada o corrompida sin autorización. (Ej: Funciones Hash, firmas digitales).\n- **Disponibilidad**: Garantiza que los datos y servicios estén accesibles para usuarios autorizados cuando los necesiten. (Ej: Redundancia, respaldos, protección anti-DDoS).",
+        "example": "Si un atacante roba tus contraseñas en texto claro, vulnera la Confidencialidad. Si modifica la cantidad de dinero en tu cuenta bancaria, vulnera la Integridad. Si tira el servidor de tu banco mediante una denegación de servicio, vulnera la Disponibilidad.",
+        "practice": "Analiza tu red doméstica e identifica un control para cada elemento de la Tríada CIA (ej: WPA3 para confidencialidad, verificaciones de actualización para integridad, UPS para disponibilidad).",
+        "defense": "Implementar principio de mínimo privilegio, cifrado en tránsito y reposo, respaldos offline (3-2-1) y monitoreo continuo.",
+        "detection": "Alertas de integridad de archivos (FIM), detección de anomalías en tráfico de red e inspección de logs de autenticación.",
+        "tags": [
+          "#fundamentos",
+          "#cia",
+          "#conceptos"
+        ],
+        "resources": {
+          "readings": [
+            {
+              "title": "OWASP: Security Fundamentals",
+              "url": "https://devguide.owasp.org/es/02-foundations/01-security-fundamentals/"
+            }
+          ],
+          "videos": [
+            {
+              "title": "Tríada CIA (Principal)",
+              "url": "https://www.youtube.com/watch?v=j2JpaZmdBi8"
+            },
+            {
+              "title": "Tríada CIA (Complemento con ejemplos)",
+              "url": "https://www.youtube.com/watch?v=_6sraKIpFmU"
+            }
+          ]
+        }
+      },
+      {
+        "id": "concept-risk-threat",
+        "name": "Riesgo, Amenaza, Vulnerabilidad y Exploit",
+        "summary": "Diferenciación matemática y conceptual entre los componentes clave del análisis de seguridad.",
+        "theory": "En ciberseguridad, confundir riesgo con amenaza es un error común:\n- **Amenaza (Threat)**: Cualquier factor externo o evento con el potencial de causar daño (ej: un grupo de ransomware, un terremoto).\n- **Vulnerabilidad (Vulnerability)**: Una debilidad o fallo en el diseño, implementación o configuración de un sistema.\n- **Exploit**: Una herramienta o secuencia de comandos diseñada para aprovechar una vulnerabilidad.\n- **Riesgo (Risk)**: La probabilidad de que una amenaza aproveche una vulnerabilidad multiplicada por el impacto del daño (`Riesgo = Amenaza × Vulnerabilidad × Impacto`).\n\n⭐ LO QUE DEBES DIFERENCIAR:\nAMENAZA\n   ↓\npuede aprovechar una\n   ↓\nVULNERABILIDAD\n   ↓\nmediante un\n   ↓\nEXPLOIT\n   ↓\nprovocando un\n   ↓\nIMPACTO / RIESGO",
+        "example": "Imagina una puerta con la cerradura rota (Vulnerabilidad). Un ladrón en el barrio (Amenaza) puede usar una palanca (Exploit) para entrar. El Riesgo es la posibilidad de que roben tus objetos de valor.",
+        "practice": "Calcula el riesgo de un servidor web obsoleto expuesto a Internet sin actualizaciones desde hace 2 años.",
+        "defense": "Gestión activa de parches, escaneo periódico de vulnerabilidades y reducción de superficie de ataque.",
+        "detection": "Scanners de vulnerabilidades (Nessus, OpenVAS) y feeds de inteligencia de amenazas (CTI).",
+        "tags": [
+          "#fundamentos",
+          "#riesgo",
+          "#vulnerabilidad"
+        ],
+        "resources": {
+          "readings": [
+            {
+              "title": "OWASP: Security Fundamentals",
+              "url": "https://devguide.owasp.org/es/02-foundations/01-security-fundamentals/"
+            },
+            {
+              "title": "INCIBE",
+              "url": "https://www.incibe.es/"
+            },
+            {
+              "title": "OWASP Security Principles",
+              "url": "https://devguide.owasp.org/es/02-foundations/03-security-principles/"
+            }
+          ],
+          "videos": [
+            {
+              "title": "Búsqueda: Riesgo, Amenaza, Vulnerabilidad y Exploit",
+              "url": "https://www.youtube.com/results?search_query=riesgo+amenaza+vulnerabilidad+exploit+ciberseguridad+español"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "mod-02",
+    "stage": 0,
+    "title": "2. ¿Cómo funciona un Computador?",
+    "category": "Informática",
+    "icon": "💻",
+    "description": "Arquitectura interna, CPU, RAM, ciclo de instrucción, buses y estructura de procesos en memoria.",
+    "prerequisites": [
+      "mod-01"
+    ],
+    "estimatedTime": "45 min",
+    "concepts": [
+      {
+        "id": "concept-cpu-ram",
+        "name": "Arquitectura Hardware: CPU, RAM y Registro",
+        "summary": "El corazón del procesamiento computacional y la distribución del espacio de direcciones.",
+        "theory": "Un computador ejecuta instrucciones procesando datos en una jerarquía de memoria:\n1. **Registros CPU**: Celdas ultrarrápidas dentro del procesador (EAX/RAX, ESP/RSP, EIP/RIP).\n2. **Memoria RAM**: Memoria volátil de acceso aleatorio organizada en direcciones hexadecimales.\n3. **Almacenamiento (SSD/HDD)**: Persistencia de archivos en bloques de almacenamiento.\nEl ciclo de procesamiento sigue el flujo: **Fetch (Busca) → Decode (Decodifica) → Execute (Ejecuta) → Writeback (Escribe resultado)**.\n\n🎯 DEBES LLEGAR A ENTENDER:\nCPU\n ↓\nRegistros\n ↓\nCaché\n ↓\nRAM\n ↓\nSSD/HDD\n\n(Y entender por qué cada nivel tiene diferente velocidad, capacidad y función).",
+        "example": "Cuando ejecutas un programa ejecutable (.exe o ELF), el Sistema Operativo carga las instrucciones del disco a la memoria RAM y asigna al registro EIP/RIP la dirección de la primera instrucción.",
+        "practice": "Abre el Administrador de Tareas (Windows) o `top`/`htop` (Linux) y analiza cuánta RAM consume el proceso de tu navegador y cuántos hilos tiene asignados.",
+        "defense": "Tecnologías a nivel de hardware como DEP (Data Execution Prevention / NX Bit) y ASLR (Address Space Layout Randomization).",
+        "detection": "Monitoreo de inyección en procesos (Memory Injection Detection) y anomalías en uso de CPU por malware.",
+        "tags": [
+          "#hardware",
+          "#cpu",
+          "#ram",
+          "#procesos"
+        ],
+        "resources": {
+          "readings": [
+            {
+              "title": "Cisco NetAcad (IT Essentials)",
+              "url": "https://www.netacad.com/es/catalogs/learn"
+            },
+            {
+              "title": "OpenStax (Computer Science)",
+              "url": "https://openstax.org/subjects/computer-science"
+            }
+          ],
+          "videos": [
+            {
+              "title": "Búsqueda: Arquitectura computador CPU RAM",
+              "url": "https://www.youtube.com/results?search_query=arquitectura+computador+CPU+RAM+registros+español"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "mod-03",
+    "stage": 1,
+    "title": "3. Sistemas Operativos",
+    "category": "Sistemas",
+    "icon": "⚙️",
+    "description": "Funcionamiento interno del Kernel, modo usuario vs modo Kernel, llamadas al sistema (syscalls) y gestión de memoria.",
+    "prerequisites": [
+      "mod-02"
+    ],
+    "estimatedTime": "45 min",
+    "concepts": [
+      {
+        "id": "concept-kernel-userland",
+        "name": "Kernel vs Userland y System Calls",
+        "summary": "La frontera de seguridad entre las aplicaciones de usuario y el hardware físico.",
+        "theory": "Los procesadores modernos ejecutan código en niveles de privilegio (Rings):\n- **Ring 0 (Kernel Mode)**: Privilegio total. Controla el hardware, memoria y controladores.\n- **Ring 3 (User Mode)**: Modo restringido donde se ejecutan las aplicaciones de usuario.\nPara que una aplicación lea un archivo o abra una conexión de red, debe invocar una **System Call (syscall)** en Linux o una función API de `NTDLL.dll` en Windows.\n\n⭐ FLUJO CLAVE:\nProcesos → Kernel → System Calls\n\nEste subtema te ayudará muchísimo para comprender malware, procesos, permisos, memoria, archivos, escalada de privilegios y análisis de comportamiento.",
+        "example": "En Python, al hacer `open('archivo.txt', 'r')`, el intérprete ejecuta la syscall `sys_openat` en el Kernel de Linux para validar tus permisos de archivo.",
+        "practice": "Usa el comando `strace ls` en Linux para observar todas las llamadas al sistema que realiza el comando `ls` antes de mostrar los archivos.",
+        "defense": "Restricción de controladores sin firma (Driver Signature Enforcement) y uso de contenedores con aislamiento de syscalls (seccomp).",
+        "detection": "Auditoría de syscalls con `auditd` en Linux o Sysmon (Event ID 8 / CreateRemoteThread) en Windows.",
+        "tags": [
+          "#sistemas",
+          "#kernel",
+          "#syscalls"
+        ],
+        "resources": {
+          "readings": [
+            {
+              "title": "Linux Kernel Documentation",
+              "url": "https://docs.kernel.org/"
+            },
+            {
+              "title": "Linux Documentation Project",
+              "url": "https://tldp.org/"
+            },
+            {
+              "title": "IBM: System Calls",
+              "url": "https://www.ibm.com/docs/en/aix/7.2?topic=calls-system"
+            }
+          ],
+          "videos": [
+            {
+              "title": "Búsqueda: Kernel vs Userland y System Calls",
+              "url": "https://www.youtube.com/results?search_query=kernel+userland+system+calls+español"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "mod-04",
+    "stage": 1,
+    "title": "4. Linux Básico para Seguridad",
+    "category": "Linux",
+    "icon": "🐧",
+    "description": "Dominio de la línea de comandos, sistema de archivos jerárquico, permisos Octales, usuarios y SSH.",
+    "prerequisites": [
+      "mod-03"
+    ],
+    "estimatedTime": "60 min",
+    "concepts": [
+      {
+        "id": "concept-linux-permissions",
+        "name": "Sistema de Archivos y Permisos Linux (chmod/chown)",
+        "summary": "Gestión de permisos POSIX, bit SUID/SGID y navegación por el árbol de directorios.",
+        "theory": "En Linux todo es un archivo. La estructura raíz `/` contiene directorios clave como `/etc` (configuración), `/var/log` (registros) y `/home` (usuarios).\nLos permisos se dividen en Propietario (u), Grupo (g) y Otros (o) con los valores:\n- Read (r) = 4\n- Write (w) = 2\n- Execute (x) = 1\nEjemplo: `chmod 755 script.sh` da rwx al dueño (7) y r-x al resto (5).\n\n⭐ Linux File Permissions:\nDebes terminar entendiendo:\n\nr = read\nw = write\nx = execute\n\ny los conceptos avanzados:\n- chmod\n- chown\n- sudo\n- SUID\n- SGID\n- Sticky Bit",
+        "example": "El archivo `/etc/shadow` almacena los hashes de contraseñas y solo debe ser legible por el usuario `root` (`-rw-r----- root shadow`).",
+        "practice": "Crea una carpeta de prueba, otorga permisos `700` con `chmod`, intenta acceder desde otro usuario no privilegiado y registra el resultado.",
+        "defense": "Eliminar permisos SUID innecesarios (`find / -perm -4000 2>/dev/null`) y aplicar el principio de mínimo privilegio.",
+        "detection": "Auditar modificaciones en `/etc/passwd` y `/etc/shadow` mediante alertas del sistema.",
+        "tags": [
+          "#linux",
+          "#cli",
+          "#permisos",
+          "#chmod"
+        ],
+        "resources": {
+          "readings": [
+            {
+              "title": "Ubuntu: Command line for beginners",
+              "url": "https://ubuntu.com/tutorials/command-line-for-beginners"
+            },
+            {
+              "title": "Linux Documentation Project",
+              "url": "https://tldp.org/"
+            },
+            {
+              "title": "GNU Coreutils Manual",
+              "url": "https://www.gnu.org/software/coreutils/manual/coreutils.html"
+            }
+          ],
+          "videos": [
+            {
+              "title": "Búsqueda: Permisos Linux chmod chown SUID",
+              "url": "https://www.youtube.com/results?search_query=permisos+Linux+chmod+chown+SUID+español"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "mod-05",
+    "stage": 1,
+    "title": "5. Windows Básico y PowerShell",
+    "category": "Windows",
+    "icon": "🪟",
+    "description": "Arquitectura de Windows, Registro del sistema, PowerShell cmdlets, Event Viewer y servicios.",
+    "prerequisites": [
+      "mod-03"
+    ],
+    "estimatedTime": "60 min",
+    "concepts": [
+      {
+        "id": "concept-win-registry",
+        "name": "El Registro de Windows y Persistencia",
+        "summary": "Base de datos centralizada de configuración de Windows y su uso en auditoría y persistencia.",
+        "theory": "El Registro de Windows almacena las configuraciones del sistema en colmenas (Hives) principales:\n- `HKLM` (HKEY_LOCAL_MACHINE): Configuración global del hardware y sistema.\n- `HKCU` (HKEY_CURRENT_USER): Configuración del usuario en sesión.\nLas claves `Run` y `RunOnce` son utilizadas frecuentemente por aplicaciones para ejecutarse al iniciar sesión.\n\n⭐ Mecanismos de persistencia de Windows:\nIdentificación y defensa. No solamente aprender cómo funcionan, sino cómo detectarlos y eliminarlos en un laboratorio.",
+        "example": "Una aplicación maliciosa puede agregar un valor en `HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run` para ejecutarse automáticamente sin conocimiento del usuario.",
+        "practice": "Abre PowerShell como Administrador y ejecuta `Get-ItemProperty -Path 'HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'` para inspeccionar las aplicaciones de inicio.",
+        "defense": "Restringir permisos de escritura en claves del Registro usando Grupos de Directivas de Grupo (GPO).",
+        "detection": "Sysmon Event ID 12 (RegistryEvent - Object create/delete) y Event ID 13 (RegistryEvent - Value Set).",
+        "tags": [
+          "#windows",
+          "#powershell",
+          "#registro",
+          "#persistencia"
+        ],
+        "resources": {
+          "readings": [
+            {
+              "title": "Microsoft Learn: Working with registry entries",
+              "url": "https://learn.microsoft.com/es-es/powershell/scripting/samples/working-with-registry-entries?view=powershell-7.5"
+            },
+            {
+              "title": "Registry Provider",
+              "url": "https://learn.microsoft.com/es-es/powershell/module/microsoft.powershell.core/about/about_registry_provider?view=powershell-7.5"
+            },
+            {
+              "title": "PowerShell Documentation",
+              "url": "https://learn.microsoft.com/es-es/powershell/"
+            }
+          ],
+          "videos": [
+            {
+              "title": "Búsqueda: Registro de Windows regedit",
+              "url": "https://www.youtube.com/results?search_query=registro+de+Windows+regedit+explicado+español"
+            },
+            {
+              "title": "Búsqueda: PowerShell desde cero",
+              "url": "https://www.youtube.com/results?search_query=PowerShell+desde+cero+español"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "mod-06",
+    "stage": 2,
+    "title": "6. Redes y Telecomunicaciones",
+    "category": "Redes",
+    "icon": "🌐",
+    "description": "Modelos OSI y TCP/IP, direccionamiento IPv4/IPv6, puertos, sockets y protocolo ARP.",
+    "prerequisites": [
+      "mod-01"
+    ],
+    "estimatedTime": "60 min",
+    "concepts": [
+      {
+        "id": "concept-osi-tcp",
+        "name": "Modelo OSI vs TCP/IP y Handshake de 3 Vías",
+        "summary": "Cómo viajan los paquetes de datos a través de las capas de red y el establecimiento de conexiones TCP.",
+        "theory": "El protocolo TCP es orientado a conexión y garantiza la entrega mediante el **TCP 3-Way Handshake**:\n1. **SYN**: El cliente envía un paquete con la bandera SYN y número de secuencia inicial.\n2. **SYN-ACK**: El servidor responde aceptando la conexión con SYN y confirmando con ACK.\n3. **ACK**: El cliente confirma la recepción y la conexión queda ESTABLISHED.\n\n⭐ THREE-WAY HANDSHAKE:\nCliente                    Servidor\n\nSYN       ────────────────>\n\n          <────────────── SYN + ACK\n\nACK       ────────────────>\n\n        CONEXIÓN ESTABLECIDA",
+        "example": "Cuando conectas tu terminal SSH a un servidor remoto por el puerto 22, antes de enviar credenciales se ejecuta un 3-Way Handshake completo.",
+        "practice": "Utiliza `ping` y `traceroute` (o `tracert` en Windows) hacia un dominio público y observa los saltos de red.",
+        "defense": "Firewalls de inspección de estado (Stateful Inspection) y filtrado de paquetes en capa de red.",
+        "detection": "Captura de paquetes con Wireshark/tcpdump buscando escaneos SYN de media apertura (SYN Flood).",
+        "tags": [
+          "#redes",
+          "#tcp",
+          "#osi",
+          "#ports"
+        ],
+        "resources": {
+          "readings": [
+            {
+              "title": "Microsoft: Three-way handshake",
+              "url": "https://learn.microsoft.com/es-es/troubleshoot/windows-server/networking/three-way-handshake-via-tcpip"
+            },
+            {
+              "title": "Cisco Networking Academy",
+              "url": "https://www.netacad.com/es/catalogs/learn"
+            }
+          ],
+          "videos": [
+            {
+              "title": "Modelo OSI vs TCP/IP (Visual)",
+              "url": "https://www.youtube.com/watch?v=MqpIJLmMny8"
+            },
+            {
+              "title": "Búsqueda: Three way handshake TCP",
+              "url": "https://www.youtube.com/results?search_query=three+way+handshake+TCP+español"
+            }
+          ]
+        }
+      },
+      {
+        "id": "concept-subnetting",
+        "name": "Direccionamiento IPv4 y Subnetting (Máscara CIDR)",
+        "summary": "Cálculo de subredes, rangos de IP utilizables, Broadcast y división de redes.",
+        "theory": "Una dirección IPv4 consta de 32 bits divididos en 4 octetos. La máscara de subred (ej: `255.255.255.0` o `/24`) separa la porción de red de la porción de hosts.\n- Para `/24`: 256 direcciones totales, 254 IPs utilizables (descontando Red y Broadcast).\n- Para `/28`: 16 direcciones totales, 14 IPs utilizables.",
+        "example": "La IP `192.168.1.50/24` pertenece a la red `192.168.1.0`. Su dirección de Broadcast es `192.168.1.255` y sus IPs asignables van de `.1` a `.254`.",
+        "practice": "Calcula el rango útil de la subred `10.0.0.0/27` e identifica su IP de Broadcast.\n\n⭐ EJERCICIOS PROGRESIVOS:\nPractica hacer subnetting progresivo para /24, /25, /26, /27, /28, /29, /30.\n\nDebes dominar: IP → máscara → red → broadcast → rango de hosts.\nEs obligatorio si después quieres aprender pentesting, firewalls o análisis de tráfico.",
+        "defense": "Segmentación de redes mediante VLANs para evitar comunicaciones no autorizadas entre departamentos.",
+        "detection": "Inspección de peticiones ARP anómalas que intenten cruzar segmentos de subred sin pasar por el router.",
+        "tags": [
+          "#redes",
+          "#ipv4",
+          "#subnetting",
+          "#cidr"
+        ],
+        "resources": {
+          "readings": [
+            {
+              "title": "Cisco Networking Academy",
+              "url": "https://www.netacad.com/es/catalogs/learn"
+            },
+            {
+              "title": "Cloudflare: What is a subnet?",
+              "url": "https://www.cloudflare.com/es-es/learning/network-layer/what-is-a-subnet/"
+            },
+            {
+              "title": "Herramienta: Subnet Calculator",
+              "url": "https://www.subnet-calculator.org/"
+            }
+          ],
+          "videos": [
+            {
+              "title": "Búsqueda: Subnetting desde cero CIDR",
+              "url": "https://www.youtube.com/results?search_query=subnetting+desde+cero+español+CIDR"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "mod-07",
+    "stage": 3,
+    "title": "7. ¿Cómo funciona Internet?",
+    "category": "Internet",
+    "icon": "🌍",
+    "description": "Análisis paso a paso de la resolución DNS, navegación HTTP/HTTPS, TLS y arquitectura Cliente-Servidor.",
+    "prerequisites": [
+      "mod-06"
+    ],
+    "estimatedTime": "50 min",
+    "concepts": [
+      {
+        "id": "concept-dns-http",
+        "name": "Resolución DNS y Negociación HTTPS (TLS Handshake)",
+        "summary": "El viaje completo desde que escribes una URL en el navegador hasta que la página se despliega.",
+        "theory": "Al ingresar `https://example.com` ocurren los siguientes pasos:\n1. **Consulta DNS**: El navegador consulta la caché local, resolver DNS y servidor raíz para traducir el dominio a una IP IPv4/IPv6.\n2. **Conexión TCP**: Handshake de 3 vías con la IP en puerto 443.\n3. **TLS Handshake**: Intercambio de certificados, negociación de algoritmos criptográficos y generación de clave simétrica de sesión.\n4. **Petición HTTP GET**: Solicitud del archivo `index.html` cifrada con la clave de sesión.\n\n⭐ ¿Qué ocurre cuando escribo https://google.com?\n\nURL\n ↓\nDNS\n ↓\nIP\n ↓\nTCP\n ↓\nTLS\n ↓\nHTTPS\n ↓\nServidor",
+        "example": "El comando `dig example.com` realiza una consulta de registros DNS tipo A para obtener la IP del servidor.",
+        "practice": "Abre las Herramientas de Desarrollador (F12) en tu navegador, ve a la pestaña 'Network' e inspecciona las cabeceras HTTP de respuesta.",
+        "defense": "Implementación de DNSSEC para evitar envenenamiento de DNS y certificados TLS válidos emitidos por una AC de confianza.",
+        "detection": "Monitoreo de peticiones DNS inusuales (DNS Tunneling o dominios DGA generados dinámicamente por malware).",
+        "tags": [
+          "#internet",
+          "#dns",
+          "#http",
+          "#tls"
+        ],
+        "resources": {
+          "readings": [
+            {
+              "title": "Cloudflare: ¿Qué es DNS?",
+              "url": "https://www.cloudflare.com/es-es/learning/dns/what-is-dns/"
+            },
+            {
+              "title": "MDN: HTTPS",
+              "url": "https://developer.mozilla.org/es/docs/Glossary/HTTPS"
+            },
+            {
+              "title": "Cloudflare: TLS",
+              "url": "https://www.cloudflare.com/es-es/learning/ssl/transport-layer-security-tls/"
+            }
+          ],
+          "videos": [
+            {
+              "title": "Búsqueda: Cómo funciona DNS",
+              "url": "https://www.youtube.com/results?search_query=DNS+como+funciona+español"
+            },
+            {
+              "title": "Búsqueda: TLS handshake HTTPS",
+              "url": "https://www.youtube.com/results?search_query=TLS+handshake+HTTPS+español"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "mod-08",
+    "stage": 4,
+    "title": "8. Programación Orientada a Ciberseguridad",
+    "category": "Programación",
+    "icon": "🐍",
+    "description": "Fundamentos de Python y Bash enfocados en la automatización de tareas, manejo de archivos y sockets de red.",
+    "prerequisites": [
+      "mod-04"
+    ],
+    "estimatedTime": "60 min",
+    "concepts": [
+      {
+        "id": "concept-python-sockets",
+        "name": "Manejo de Sockets y Automatización con Python",
+        "summary": "Creación de scripts para interacción en red, consumo de APIs y análisis de texto.",
+        "theory": "Python es el lenguaje preferido en ciberseguridad gracias a su simplicidad y librerías nativas como `socket`, `requests` y `os`.\nLa librería `socket` permite crear clientes y servidores TCP/UDP directamente interactuando con las capas del sistema operativo.\n\n⭐ AUTOMATIZACIÓN PARA CIBERSEGURIDAD:\n\nFlujo básico:\nPython → leer archivos → procesar logs → buscar patrones → generar reporte\n\nFlujo de red:\nPython → socket → IP + puerto → TCP",
+        "example": "Un banner grabber sencillo en Python conecta a la IP y puerto especificado y lee la primera respuesta del servidor para identificar la versión del servicio.",
+        "practice": "Escribe un script en Python que intente conectar al puerto 80 de `127.0.0.1` e imprima un mensaje según la conexión sea exitosa o rechazada.",
+        "defense": "Revisión estática de código (SAST) para evitar la inyección de comandos o ejecución insegura de funciones como `eval()` o `exec()`.",
+        "detection": "Análisis de comportamiento de scripts no firmados ejecutando sockets inusuales en máquinas de la red.",
+        "tags": [
+          "#python",
+          "#sockets",
+          "#programacion",
+          "#scripting"
+        ],
+        "resources": {
+          "readings": [
+            {
+              "title": "Python Docs: Sockets HOWTO",
+              "url": "https://docs.python.org/es/3.13/howto/sockets.html"
+            },
+            {
+              "title": "Python Docs: Módulo socket",
+              "url": "https://docs.python.org/es/3/library/socket.html"
+            },
+            {
+              "title": "Python Oficial Completo",
+              "url": "https://docs.python.org/es/3/"
+            }
+          ],
+          "videos": [
+            {
+              "title": "Búsqueda: Python desde cero",
+              "url": "https://www.youtube.com/results?search_query=Python+desde+cero+español"
+            },
+            {
+              "title": "Búsqueda: Sockets Python",
+              "url": "https://www.youtube.com/results?search_query=Sockets+Python+español"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "mod-09",
+    "stage": 7,
+    "title": "9. Seguridad Básica y Hardening",
+    "category": "Seguridad",
+    "icon": "🔒",
+    "description": "Principios de defensa en profundidad, bastionado de sistemas (Hardening), autenticación MFA y contraseñas.",
+    "prerequisites": [
+      "mod-01",
+      "mod-04",
+      "mod-05"
+    ],
+    "estimatedTime": "45 min",
+    "concepts": [
+      {
+        "id": "concept-hardening",
+        "name": "Defensa en Profundidad y Bastionado (Hardening)",
+        "summary": "Estrategia multicapa para reducir la superficie de ataque en sistemas y redes.",
+        "theory": "La **Defensa en Profundidad** establece que ningún control de seguridad es infalible por sí solo. Se aplican capas superpuestas:\n1. Seguridad Física\n2. Perímetro / Red\n3. Endpoint / Host\n4. Aplicación\n5. Datos / Criptografía\nEl **Hardening** implica deshabilitar servicios innecesarios, aplicar parches, cambiar credenciales por defecto y configurar reglas estricta de firewall.\n\n⭐ CONCEPTOS ADICIONALES A DOMINAR:\n- Mínimo privilegio\n- Configuración segura por defecto\n- Reducción de superficie de ataque\n- Actualización de software\n- Firewall\n- Usuarios y permisos\n- Backups\n- Logging\n- Defensa en profundidad",
+        "example": "Deshabilitar el protocolo SMBv1 en Windows es una medida de Hardening crucial para prevenir ataques del tipo WannaCry.",
+        "practice": "Inspecciona los servicios activos en tu sistema operativo y deshabilita aquellos que no utilices.",
+        "defense": "Uso de plantillas de seguridad reconocidas internacionalmente como CIS Benchmarks (Center for Internet Security).",
+        "detection": "Auditoría periódica de configuraciones de seguridad mediante scripts de compliance audit.",
+        "tags": [
+          "#seguridad",
+          "#hardening",
+          "#defensa",
+          "#mfa"
+        ],
+        "resources": {
+          "readings": [
+            {
+              "title": "OWASP Security Principles",
+              "url": "https://devguide.owasp.org/es/02-foundations/03-security-principles/"
+            },
+            {
+              "title": "CIS Controls",
+              "url": "https://www.cisecurity.org/controls"
+            }
+          ],
+          "videos": [
+            {
+              "title": "INCIBE: Hardening Básico Linux",
+              "url": "https://www.youtube.com/watch?v=YZnkAWdXB4s"
+            },
+            {
+              "title": "Aprende IT: Hardening del kernel Linux",
+              "url": "https://www.youtube.com/watch?v=Os3STDgN2ZA"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "mod-10",
+    "stage": 11,
+    "title": "10. Primer Laboratorio Educativo",
+    "category": "Laboratorios",
+    "icon": "🧪",
+    "description": "Aplicación integrada de conocimientos: Análisis de paquetes, identificación de servicios y respuesta guiada.",
+    "prerequisites": [
+      "mod-06",
+      "mod-07",
+      "mod-08"
+    ],
+    "estimatedTime": "60 min",
+    "concepts": [
+      {
+        "id": "concept-first-lab",
+        "name": "Metodología de Análisis en Laboratorio Seguro",
+        "summary": "Protocolo para investigar artefactos, realizar capturas de tráfico y documentar hallazgos de forma ética.",
+        "theory": "Todos los experimentos prácticos deben realizarse en entornos controlados y aislados (como máquinas virtuales en Host-Only o entornos deliberadamente vulnerables).\nEl flujo de investigación comprende:\n1. Definición del objetivo\n2. Captura de datos (Logs / PCAP)\n3. Análisis e interpretación\n4. Formulación de remediaciones y mitigación.",
+        "example": "Analizar un archivo `.pcap` en Wireshark filtrando por `http.request.method == 'POST'` para identificar intentos de envío de datos sensibles.",
+        "practice": "Completa el Laboratorio Lab-001 disponible en la sección 'CyberLabs' de esta plataforma.\n\n🔥 IMPORTANTE: METODOLOGÍA PRÁCTICA\nConvierte cada tema en el siguiente ciclo:\n📖 Lectura → 🎥 Video → 🧠 Quiz → 💻 Ejercicio → 🧪 Laboratorio → 📝 Evaluación\n\nEjemplo: Tras estudiar TCP/IP, no pases al siguiente módulo. Haz un laboratorio con Wireshark o Packet Tracer para observar los paquetes reales y asimilar el conocimiento.",
+        "defense": "Aislamiento total de red y segmentación en hipervisores (VirtualBox/VMware) antes de ejecutar pruebas.",
+        "detection": "Auditoría de integridad de red y registro de logs centralizado en laboratorio.",
+        "tags": [
+          "#laboratorio",
+          "#practica",
+          "#analisis",
+          "#ethicallab"
+        ],
+        "resources": {
+          "readings": [
+            {
+              "title": "TryHackMe",
+              "url": "https://tryhackme.com/"
+            },
+            {
+              "title": "TryHackMe Paths",
+              "url": "https://tryhackme.com/paths"
+            },
+            {
+              "title": "OWASP Foundations",
+              "url": "https://devguide.owasp.org/es/02-foundations/"
+            },
+            {
+              "title": "Cisco Networking Academy",
+              "url": "https://www.netacad.com/es/"
+            },
+            {
+              "title": "PortSwigger Web Security Academy",
+              "url": "https://portswigger.net/web-security"
+            },
+            {
+              "title": "Wireshark",
+              "url": "https://www.wireshark.org/"
+            },
+            {
+              "title": "Cisco Packet Tracer",
+              "url": "https://www.netacad.com/courses/packet-tracer"
+            }
+          ],
+          "videos": [
+            {
+              "title": "Búsqueda: TryHackMe desde cero",
+              "url": "https://www.youtube.com/results?search_query=TryHackMe+desde+cero+español"
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

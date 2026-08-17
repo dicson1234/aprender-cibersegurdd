@@ -1,0 +1,112 @@
+[
+  {
+    "id": "challenge-01",
+    "title": "Análisis del Viaje DNS completo",
+    "category": "Internet & Redes",
+    "difficulty": "Intermedio",
+    "xp": 100,
+    "description": "Explica de forma estructurada paso a paso qué sucede desde que un usuario escribe 'https://cyberlab.edu' en la barra de direcciones hasta que la página se renderiza en la pantalla.",
+    "prompt": "Tu respuesta debe detallar: 1. Caché del navegador y SO, 2. Consulta al Resolver DNS, 3. Handshake TCP (banderas), 4. Negociación TLS/SSL (certificados y claves de sesión), 5. Petición HTTP GET y respuesta.",
+    "hints": ["Recuerda incluir los puertos involucrados (53, 443).", "Menciona el cifrado simétrico generado durante el TLS Handshake."],
+    "idealSolution": "1. El navegador consulta la caché local -> archivo hosts -> resolver DNS local. Si no está en caché, consulta a servidores Raíz (Root), TLD (.edu) y Autoritativo hasta obtener la IP.\n2. Con la IP obtenida, el cliente inicia un TCP 3-Way Handshake (SYN -> SYN-ACK -> ACK) al puerto 443 del servidor.\n3. Inicia el TLS Handshake: Cliente envía Client Hello (cifrados soportados) -> Servidor responde Server Hello con su Certificado Digital X.509 -> Se verifica la CA y se intercambian premaster secrets para derivar una clave simétrica de sesión.\n4. El cliente envía la petición HTTP GET / cifrada con la clave simétrica.\n5. El servidor procesa la petición y responde HTTP 200 OK cifrado con el HTML/CSS/JS, el cual es renderizado por el motor del navegador."
+  },
+  {
+    "id": "challenge-02",
+    "title": "Investigación de Logs de Autenticación sospechosos",
+    "category": "Blue Team & SOC",
+    "difficulty": "Avanzado",
+    "xp": 150,
+    "description": "Analiza las siguientes líneas de log de un servidor Linux `/var/log/auth.log` e identifica el patrón de ataque, la IP atacante y el usuario comprometido.",
+    "prompt": "Log extract:\n`Oct 12 14:01:02 server sshd[1020]: Failed password for invalid user admin from 192.168.1.105 port 45220 ssh2`\n`Oct 12 14:01:04 server sshd[1022]: Failed password for invalid user root from 192.168.1.105 port 45222 ssh2`\n`Oct 12 14:01:06 server sshd[1024]: Failed password for user dicson from 192.168.1.105 port 45224 ssh2`\n`Oct 12 14:01:08 server sshd[1026]: Accepted password for user dicson from 192.168.1.105 port 45226 ssh2`",
+    "hints": ["Observa la alta frecuencia de intentos fallidos en intervalos de 2 segundos.", "Busca el mensaje 'Accepted password'."],
+    "idealSolution": "Ataque identificado: Fuerza Bruta SSH (Brute Force Attack).\nIP atacante: 192.168.1.105.\nUsuario comprometido: dicson.\nAnálisis: La IP realizó múltiples intentos fallidos consecutivos contra usuarios comunes (admin, root, dicson) en intervalos de 2 segundos hasta encontrar la contraseña correcta para el usuario 'dicson' a las 14:01:08.\nAcciones recomendadas: Bloquear la IP 192.168.1.105 en el firewall, cambiar la contraseña de dicson e implementar Fail2Ban y autenticación por clave SSH con MFA."
+  },
+  {
+    "id": "challenge-03",
+    "title": "Cálculo de Subredes para un Departamento de Seguridad",
+    "category": "Redes",
+    "difficulty": "Intermedio",
+    "xp": 100,
+    "description": "Tu empresa te solicita asignar un segmento de red seguro para 25 servidores de análisis forense partiendo de la red privada 172.16.0.0/24.",
+    "prompt": "Determina: 1. La máscara CIDR requerida, 2. La máscara en notación decimal, 3. La dirección de red asignada, 4. La IP de Broadcast y 5. El rango de IPs asignables.",
+    "hints": ["Para 25 hosts necesitas al menos 27 direcciones en la potencia de 2 más cercana."],
+    "idealSolution": "1. Máscara CIDR: /27 (2^5 = 32 direcciones totales, 30 utilizables, suficiente para 25 hosts).\n2. Máscara decimal: 255.255.255.224.\n3. Dirección de Red: 172.16.0.0/27.\n4. Dirección de Broadcast: 172.16.0.31.\n5. Rango utilizable: 172.16.0.1 a 172.16.0.30."
+  },
+  {
+    "id": "challenge-04",
+    "title": "Auditoría de Permisos SUID en Linux",
+    "category": "Linux Hardening",
+    "difficulty": "Avanzado",
+    "xp": 150,
+    "description": "Al auditor la configuración de un servidor de producción se encuentra que el binario `/usr/bin/find` tiene asignados los permisos `-rwsr-xr-x root root`.",
+    "prompt": "Explica por qué esta configuración representa un riesgo crítico de Escalada de Privilegios y cómo un usuario no privilegiado podría obtener una shell de root.",
+    "hints": ["Revisa GTFOBins para la herramienta `find` con bandera `-exec`."],
+    "idealSolution": "Riesgo Crítico: La letra 's' en los permisos de usuario indica que el bit SUID está activo y el propietario es 'root'. Esto significa que cualquier usuario del sistema que ejecute `find` lo ejecutará con privilegios root absolutos.\nExplotación: Un usuario común puede ejecutar `/usr/bin/find . -exec /bin/sh -p \\;` para desovar una shell interactiva con UID 0 (root).\nRemediación: Eliminar el bit SUID ejecutando `chmod u-s /usr/bin/find`."
+  },
+  {
+    "id": "challenge-05",
+    "title": "Desglose de Hash y Salting",
+    "category": "Criptografía & Seguridad",
+    "difficulty": "Intermedio",
+    "xp": 120,
+    "description": "Explica por qué almacenar contraseñas usando únicamente `SHA-256(password)` es inseguro y qué beneficio aporta el uso de 'Salt' y algoritmos de estiramiento de clave como bcrypt o Argon2.",
+    "prompt": "Detalla las vulnerabilidades asociadas a Tablas Arcoíris (Rainbow Tables) y ataques de diccionario.",
+    "hints": ["Un Salt es una cadena aleatoria única por usuario.", "Los algoritmos de hashing lento consumen tiempo y memoria intencionalmente."],
+    "idealSolution": "Inseguridad de SHA-256 directo: Al ser una función extremadamente rápida, un atacante con GPU puede probar miles de millones de hashes por segundo (Ataques de Fuerza Bruta y Diccionario). Además, si dos usuarios usan la misma contraseña, sus hashes son idénticos, permitiendo búsquedas precomputadas en Tablas Arcoíris (Rainbow Tables).\nSolución con Salt: Agregar una cadena aleatoria única (Salt) a cada contraseña antes del hash rompe el uso de Tablas Arcoíris precalculadas.\nSolución con bcrypt/Argon2: Incorporan un factor de costo (Work Factor/Memory Hardness) que ralentiza deliberadamente el cálculo del hash, haciendo inviables los ataques masivos por fuerza bruta."
+  },
+  {
+    "id": "challenge-06",
+    "title": "Detección de Inyección de Comandos en Web",
+    "category": "Seguridad Web",
+    "difficulty": "Avanzado",
+    "xp": 150,
+    "description": "Un formulario web en Python ejecuta internamente: `os.system('ping -c 1 ' + user_input)`.",
+    "prompt": "Muestra un payload de prueba para confirmar la vulnerabilidad de Command Injection y explica la remediación adecuada.",
+    "hints": ["Utiliza separadores de comandos en Bash como `;` o `&&`."],
+    "idealSolution": "Payload de prueba: `127.0.0.1; id` o `8.8.8.8 && cat /etc/passwd`.\nEfecto: El sistema operativo ejecutará el comando `ping` y a continuación ejecutará el comando inyectado `id` o `cat /etc/passwd` devolviendo el resultado en la respuesta web.\nRemediación: Evitar el uso de `os.system()` con concatenación de cadenas. Utilizar el módulo `subprocess` pasando los argumentos como una lista sin invocar la shell del sistema (`subprocess.run(['ping', '-c', '1', user_input], shell=False)`), además de validar y sanitizar la entrada mediante listas blancas."
+  },
+  {
+    "id": "challenge-07",
+    "title": "Identificación de artefactos en el Registro de Windows",
+    "category": "Forense Digital",
+    "difficulty": "Avanzado",
+    "xp": 160,
+    "description": "Durante la investigación de un incidente en un equipo Windows 11, encuentras la clave `HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\Updater` apuntando a `C:\\Users\\Public\\update.exe`.",
+    "prompt": "Explica la técnica MITRE ATT&CK correspondiente, su objetivo y los pasos para analizar el binario de forma aislada.",
+    "hints": ["Revisa la técnica T1547.001 (Boot or Logon Autostart Execution: Registry Run Keys)."],
+    "idealSolution": "Técnica MITRE: T1547.001 (Registry Run Keys / Startup Folder).\nObjetivo: Persistencia (Persistence). Garantizar la ejecución automática del código malicioso cada vez que el usuario inicie sesión.\nPasos de análisis aislado:\n1. Extraer una copia del binario `update.exe` de forma segura sin ejecutarlo.\n2. Calcular sus hashes cryptographicos (MD5, SHA-256) y consultarlos en VirusTotal.\n3. Montar una máquina virtual aislada (Sandbox sin conectividad a red de producción).\n4. Realizar análisis estático (extraer strings con `strings.exe`, analizar cabecera PE con PE-bear) y análisis dinámico con Procmon, Regshot y Wireshark."
+  },
+  {
+    "id": "challenge-08",
+    "title": "Diseño de Regla de Detección Sigma/YARA Básica",
+    "category": "SOC & Detección",
+    "difficulty": "Experto",
+    "xp": 200,
+    "description": "Crea la lógica conceptual para una regla de alerta que detecte la ejecución del proceso `powershell.exe` cuando contiene en su línea de comandos el argumento `-EncodedCommand` o `-e` seguido de cadenas Base64.",
+    "prompt": "Especifica el campo de evento (ej. Process CommandLine), la condición de coincidencia y la severidad asignada.",
+    "hints": ["Los atacantes usan -EncodedCommand para ofuscar scripts en PowerShell."],
+    "idealSolution": "Lógica de Detección:\nRegla: Detección de PowerShell con Comandos Ofuscados (Base64).\nCampo de evento: Image / OriginalFileName == 'powershell.exe' Y CommandLine contiene (' -EncodedCommand ', ' -enc ', ' -e ')\nSeveridad: Alta (High).\nExplicación: El parámetro `-EncodedCommand` acepta una cadena codificada en Unicode Base64. Aunque puede usarse en administración legítima, es altamente frecuente en ataques de descarga y ejecución de cargas útiles (Malware Stagers). La alerta debe desovar una investigación para decodificar la cadena Base64 y verificar su contenido."
+  },
+  {
+    "id": "challenge-09",
+    "title": "Análisis de Cabeceras HTTP de Seguridad",
+    "category": "Seguridad Web",
+    "difficulty": "Intermedio",
+    "xp": 110,
+    "description": "Se audita un sitio web bancario y se observa la falta de la cabecera `Strict-Transport-Security` (HSTS) y `Content-Security-Policy` (CSP).",
+    "prompt": "Explica a qué riesgos expone a los usuarios la ausencia de estas dos cabeceras y qué valores recomiendas implementar.",
+    "hints": ["HSTS fuerza HTTPS.", "CSP previene la ejecución de scripts maliciosos de terceros (XSS)."],
+    "idealSolution": "Ausencia de HSTS (Strict-Transport-Security): Expone a los usuarios a ataques de degradación de SSL (SSL Strip) y Man-in-the-Middle donde un atacante intercepta la primera petición HTTP antes de redirigir a HTTPS.\nValor recomendado: `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`.\nAusencia de CSP (Content-Security-Policy): Deja la aplicación vulnerable a ataques Cross-Site Scripting (XSS), permitiendo la ejecución de scripts maliciosos inyectados de cualquier origen.\nValor recomendado: Configurar una política CSP restrictiva declarando orígenes de confianza (`default-src 'self'; script-src 'self' https://trusted.cdn.com`)."
+  },
+  {
+    "id": "challenge-10",
+    "title": "Simulación de Respuesta ante Incidente Ransomware",
+    "category": "Incident Response",
+    "difficulty": "Experto",
+    "xp": 220,
+    "description": "El SOC recibe una alerta a las 03:00 AM: Múltiples servidores de archivos están renombrando documentos con la extensión `.locked` y creando archivos `READ_ME.txt`.",
+    "prompt": "Ordena cronológicamente las primeras 4 acciones de contención e investigación inmediata que debe realizar el equipo de respuesta a incidentes.",
+    "hints": ["La contención física/red es la prioridad #1 ante un brote activo."],
+    "idealSolution": "1. Contención Inmediata de Red: Aislar físicamente o deshabilitar los puertos de red/VLAN de los servidores afectados para detener la propagación lateral a través de SMB/Active Directory.\n2. Preservación de Evidencia: Extraer volcados de memoria RAM (RAM Dumps) de equipos afectados donde los procesos de cifrado sigan activos para intentar recuperar claves en memoria.\n3. Identificación del Vector de Entrada e Identidad Compromedida: Analizar logs de VPN, RDP y controladores de dominio para revocar credenciales asociadas al acceso inicial.\n4. Verificación de Respaldos: Confirmar el estado de inmutabilidad y aislamiento de los respaldos de seguridad (Backups Offline 3-2-1) antes de iniciar cualquier procedimiento de restauración."
+  }
+]

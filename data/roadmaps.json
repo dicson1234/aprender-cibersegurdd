@@ -1,0 +1,37 @@
+[
+  {
+    "role": "SOC Analyst (Analista de SOC Nivel 1/2)",
+    "description": "Profesional encargado del monitoreo continuo, triaje de alertas de seguridad, análisis de logs y contención inicial de incidentes.",
+    "keySkills": ["Análisis de Logs", "SIEM (Splunk/Sentinel)", "Redes TCP/IP", "Wireshark", "Triage de Alertas", "MITRE ATT&CK"],
+    "certifications": ["CompTIA Security+", "Cisco CyberOps Associate", "BTL1 (Blue Team Level 1)"],
+    "recommendedModules": ["mod-01", "mod-04", "mod-05", "mod-06", "mod-07", "mod-09", "mod-10"]
+  },
+  {
+    "role": "Pentester / Red Teamer",
+    "description": "Especialista en seguridad ofensiva que simula ciberataques reales autorizados para identificar vulnerabilidades antes que los ciberdelincuentes.",
+    "keySkills": ["Metodología de Pentesting", "OWASP Top 10", "Metasploit", "Nmap", "Burp Suite", "Python Scripting", "Escalada de Privilegios"],
+    "certifications": ["eJPT (eLearnSecurity Junior Penetration Tester)", "OSCP (Offensive Security Certified Professional)", "PNPT"],
+    "recommendedModules": ["mod-04", "mod-05", "mod-06", "mod-07", "mod-08", "mod-09", "mod-10"]
+  },
+  {
+    "role": "Incident Responder & Digital Forensics (DFIR)",
+    "description": "Detective de ciberseguridad enfocado en la adquisición de evidencia, análisis de volcado de memoria RAM, inspección de discos y mitigación de intrusiones complejas.",
+    "keySkills": ["Volatility Framework", "Autopsy", "Análisis de Registro Windows", "Timeline Analysis", "Ensamble & Artefactos", "Scripting"],
+    "certifications": ["GIAC Certified Forensic Analyst (GCFA)", "Certified Computer Examiner (CCE)", "eCDFP"],
+    "recommendedModules": ["mod-02", "mod-03", "mod-04", "mod-05", "mod-06", "mod-10"]
+  },
+  {
+    "role": "Malware Analyst & Reverse Engineer",
+    "description": "Especialista en descompilar y analizar muestras maliciosas para entender su funcionamiento interno, indicadores de compromiso y algoritmos de cifrado.",
+    "keySkills": ["Ensamblador x86/x64", "Ghidra / IDA Pro", "Debuggers (x64dbg)", "Análisis Estático y Dinámico", "C / C++", "Sandboxing"],
+    "certifications": ["GREM (GIAC Reverse Engineering Malware)", "eCRE (eLearnSecurity Certified Reverse Engineer)"],
+    "recommendedModules": ["mod-02", "mod-03", "mod-05", "mod-08"]
+  },
+  {
+    "role": "Cloud Security Engineer",
+    "description": "Ingeniero encargado de diseñar, implementar y asegurar arquitecturas y cargas de trabajo en la nube (AWS, Azure, GCP, Kubernetes).",
+    "keySkills": ["AWS / Azure IAM", "Seguridad de Contenedores (Docker/K8s)", "DevSecOps", "CI/CD Security", "Infraestructura como Código (Terraform)"],
+    "certifications": ["AWS Certified Security - Specialty", "CCSK (Certificate of Cloud Security Knowledge)", "AZ-500"],
+    "recommendedModules": ["mod-01", "mod-04", "mod-06", "mod-07", "mod-08"]
+  }
+]

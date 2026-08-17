@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Nmap (Network Mapper)",
+    "category": "Networking & Recon",
+    "os": "Linux, Windows, macOS",
+    "level": "Principiante - Avanzado",
+    "description": "La herramienta estándar de la industria para escaneo de puertos, descubrimiento de hosts en red y detección de versiones de servicios y sistemas operativos.",
+    "officialUrl": "https://nmap.org/",
+    "usageContext": "Se utiliza en auditorías de red para cartografiar todos los dispositivos conectados y verificar qué puertos y servicios están abiertos antes de un análisis de vulnerabilidades.",
+    "labTies": "Lab-004, Módulo 6 (Redes)"
+  },
+  {
+    "name": "Wireshark",
+    "category": "Networking & Análisis",
+    "os": "Linux, Windows, macOS",
+    "level": "Principiante - Avanzado",
+    "description": "El analizador de protocolos de red gráfico más relevante del mundo. Permite capturar e inspeccionar tráfico de red a nivel de bit.",
+    "officialUrl": "https://www.wireshark.org/",
+    "usageContext": "Indispensable para analizar Handshakes de red, depurar comunicaciones, detectar filtración de datos sin cifrar e investigar sospechas de malware.",
+    "labTies": "Lab-001, Módulo 7 (Internet)"
+  },
+  {
+    "name": "Burp Suite (Community / Professional)",
+    "category": "Seguridad Web",
+    "os": "Linux, Windows, macOS",
+    "level": "Intermedio - Experto",
+    "description": "Proxy de interceptación HTTP/HTTPS líder para realizar auditorías de seguridad en aplicaciones web y APIs.",
+    "officialUrl": "https://portswigger.net/burp",
+    "usageContext": "Se interpone entre el navegador y la aplicación web para interceptar, modificar y repetir peticiones en busca de vulnerabilidades como XSS, SQLi y fallos de autorización.",
+    "labTies": "Lab-005, Módulo 9 (Seguridad)"
+  },
+  {
+    "name": "Autopsy Digital Forensics",
+    "category": "Forense Digital",
+    "os": "Windows, Linux",
+    "level": "Intermedio - Avanzado",
+    "description": "Plataforma gráfica de análisis forense digital para investigar imágenes de disco duro, tarjetas de memoria y recuperar archivos eliminados.",
+    "officialUrl": "https://www.autopsy.com/",
+    "usageContext": "Utilizada por analistas DFIR y fuerzas del orden para analizar sistemas de archivos (NTFS, EXT4), extraer historial de navegación y analizar la línea de tiempo de un incidente.",
+    "labTies": "CyberCases, Módulo 3 (Sistemas)"
+  },
+  {
+    "name": "Volatility Framework",
+    "category": "Forense & Memoria",
+    "os": "Linux, Windows, macOS",
+    "level": "Avanzado - Experto",
+    "description": "Framework avanzado de procesamiento de volcados de memoria RAM para la extracción de artefactos volátiles.",
+    "officialUrl": "https://www.volatilityfoundation.org/",
+    "usageContext": "Permite recuperar inyecciones de código en memoria, sockets activos, listas de procesos ocultos y artefactos que no tocaron el disco duro.",
+    "labTies": "Módulo 2 (Hardware), Reto 7"
+  },
+  {
+    "name": "Metasploit Framework",
+    "category": "Pentesting & Red Team",
+    "os": "Linux, macOS, Windows",
+    "level": "Intermedio - Experto",
+    "description": "La plataforma de desarrollo de exploits y pruebas de penetración más extendida globalmente.",
+    "officialUrl": "https://www.metasploit.com/",
+    "usageContext": "Utilizada por equipos de Red Team para validar vulnerabilidades previamente descubiertas en laboratorios autorizados mediante cargas útiles (Payloads/Meterpreter).",
+    "labTies": "Módulo 9 (Seguridad)"
+  },
+  {
+    "name": "Snort / Suricata",
+    "category": "Blue Team & IDS/IPS",
+    "os": "Linux, Windows",
+    "level": "Intermedio - Avanzado",
+    "description": "Sistemas de detección y prevención de intrusiones (IDS/IPS) basados en firmas y patrones de tráfico de red.",
+    "officialUrl": "https://www.snort.org/",
+    "usageContext": "Inspeccionan los paquetes de red en tiempo real comparándolos con reglas conocidas para bloquear intentos de intrusión y notificar al SIEM.",
+    "labTies": "Módulo 10 (SOC)"
+  },
+  {
+    "name": "Process Monitor (Procmon - Sysinternals)",
+    "category": "Windows & Malware",
+    "os": "Windows",
+    "level": "Intermedio",
+    "description": "Herramienta avanzada de supervisión para Windows que muestra la actividad en tiempo real del sistema de archivos, el Registro y los procesos/hilos.",
+    "officialUrl": "https://learn.microsoft.com/en-us/sysinternals/downloads/procmon",
+    "usageContext": "Esencial para el análisis dinámico de malware en laboratorio para ver qué archivos intenta crear, modificar o borrar una muestra.",
+    "labTies": "Lab-003, Módulo 5 (Windows)"
+  },
+  {
+    "name": "Ghidra",
+    "category": "Reverse Engineering",
+    "os": "Linux, Windows, macOS",
+    "level": "Experto",
+    "description": "Suite de desensamblado e ingeniería inversa desarrollada por la NSA (National Security Agency) y liberada como código abierto.",
+    "officialUrl": "https://ghidra-sre.org/",
+    "usageContext": "Analiza ejecutables compilados binarios (PE, ELF) convirtiendo código máquina en desensamblado o descompilado en C para analizar lógica interna sin tener el código fuente.",
+    "labTies": "Etapa 14 (Reverse Engineering)"
+  },
+  {
+    "name": "CyberChef",
+    "category": "Automatización & Cripto",
+    "os": "Web App (Browser / Offline)",
+    "level": "Principiante - Avanzado",
+    "description": "Conocida como la 'Navaja Suiza Digital', es una herramienta web para manipulación de datos, conversiones Base64, operaciones criptográficas y análisis de texto.",
+    "officialUrl": "https://gchq.github.io/CyberChef/",
+    "usageContext": "Ideal para decodificar payloads ofuscados, desobstruir cadenas Base64 o Hexadecimal y extraer direcciones IP de bloques de texto masivos.",
+    "labTies": "Módulo 8, Retos de Laboratorio"
+  }
+]

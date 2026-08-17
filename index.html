@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CyberLab — Academia Personal Interactiva de Ciberseguridad</title>
+  <meta name="description" content="Plataforma educativa estática interactiva para aprender ciberseguridad desde cero hasta nivel profesional.">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#090d16">
+
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="./css/variables.css">
+  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/components.css">
+</head>
+<body>
+
+  <div id="app-container">
+    <!-- Desktop Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <span>🛡️</span> CyberLab
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Principal</div>
+        <a href="#dashboard" class="nav-item active"><span class="icon">📊</span> Dashboard</a>
+        <a href="#map" class="nav-item"><span class="icon">🗺️</span> Mapa de Conocimientos</a>
+        <a href="#tree" class="nav-item"><span class="icon">🌳</span> Ruta de Aprendizaje</a>
+
+        <div class="nav-section-label">Práctica & Evaluación</div>
+        <a href="#labs" class="nav-item"><span class="icon">🧪</span> CyberLabs</a>
+        <a href="#quizzes" class="nav-item"><span class="icon">📝</span> Exámenes</a>
+        <a href="#challenges" class="nav-item"><span class="icon">⚔️</span> Retos Prácticos</a>
+        <a href="#spaced-repetition" class="nav-item"><span class="icon">🔄</span> Repaso Espaciado</a>
+
+        <div class="nav-section-label">Base de Conocimiento</div>
+        <a href="#notes" class="nav-item"><span class="icon">📓</span> Mis Apuntes</a>
+        <a href="#resources" class="nav-item"><span class="icon">📚</span> Recursos Curados</a>
+        <a href="#glossary" class="nav-item"><span class="icon">📖</span> Glosario</a>
+        <a href="#tools" class="nav-item"><span class="icon">🛠️</span> Herramientas</a>
+
+        <div class="nav-section-label">Avanzado & Carrera</div>
+        <a href="#cybertutor" class="nav-item"><span class="icon">🤖</span> CyberTutor IA</a>
+        <a href="#projects" class="nav-item"><span class="icon">🚀</span> Proyectos</a>
+        <a href="#cases" class="nav-item"><span class="icon">🕵️</span> CyberCases</a>
+        <a href="#mitre" class="nav-item"><span class="icon">🎯</span> MITRE ATT&CK</a>
+        <a href="#careers" class="nav-item"><span class="icon">🛣️</span> Rutas Profesionales</a>
+        <a href="#security" class="nav-item"><span class="icon">🔒</span> Seguridad de App</a>
+        <a href="#profile" class="nav-item"><span class="icon">👤</span> Mi Perfil</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="mobile-toggle" id="mobile-drawer-toggle">☰</button>
+          <div class="search-bar-trigger" id="search-trigger-btn">
+            <span>🔍</span> <span>Buscar conceptos, labs...</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="user-stats-pill">
+            <div class="stat-item level">⚡ Nivel <span class="stat-level-val">1</span></div>
+            <div class="stat-item xp">🏆 <span class="stat-xp-val">0</span> XP</div>
+            <div class="stat-item streak">🔥 <span class="stat-streak-val">1 d</span></div>
+          </div>
+          <button class="btn-icon" title="Exportar Backup JSON" onclick="window.CyberStorage.exportBackup()">📥</button>
+        </div>
+      </header>
+
+      <!-- View Containers -->
+      <main class="content-body">
+        
+        <!-- DASHBOARD VIEW -->
+        <section id="view-dashboard" class="view-section active">
+          <h1 class="page-title">CyberLab Dashboard</h1>
+          <p class="page-subtitle">Tu centro de control y entrenamiento en ciberseguridad.</p>
+
+          <div class="grid-cards">
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Progreso General de Carrera</span>
+                <span class="tag cyan" id="dash-overall-progress-pct">0%</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="dash-overall-progress-bar" style="width: 0%;"></div>
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-muted); text-align: right;">
+                Conceptos dominados: <span id="dash-concepts-learned">0 / 0</span>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Laboratorios Completados</span>
+                <span class="tag green" id="dash-labs-done">0 / 0</span>
+              </div>
+              <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px;">
+                Experimentación práctica en entornos simulados y aislados.
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Exámenes Aprobados</span>
+                <span class="tag purple" id="dash-quizzes-done">0 / 0</span>
+              </div>
+              <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px;">
+                Evaluaciones teóricas y escenarios tácticos.
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Retos Completados</span>
+                <span class="tag yellow" id="dash-challenges-done">0 / 0</span>
+              </div>
+              <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px;">
+                Resolución de problemas de razonamiento y análisis de logs.
+              </div>
+            </div>
+          </div>
+
+          <!-- Recommendation Engine Banner -->
+          <div class="card" style="background: var(--gradient-card); border-color: var(--accent-cyan); margin-bottom: 24px;">
+            <div class="card-header">
+              <div>
+                <span class="tag cyan">🎯 PRÓXIMO TEMA RECOMENDADO POR CYBERLAB</span>
+                <h2 style="font-size: 1.4rem; margin-top: 6px;" id="dash-rec-title">Fundamentos de Ciberseguridad</h2>
+              </div>
+              <button class="btn btn-primary" id="dash-rec-action">Comenzar Ahora →</button>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.95rem;" id="dash-rec-reason">El sistema ha identificado tus prerrequisitos para continuar.</p>
+          </div>
+
+          <!-- Category Breakdown -->
+          <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">Progreso por Áreas Técnicas</h2>
+          <div class="grid-cards" id="dash-categories-container"></div>
+        </section>
+
+        <!-- KNOWLEDGE MAP VIEW -->
+        <section id="view-map" class="view-section">
+          <h1 class="page-title">Mapa de Conocimientos</h1>
+          <p class="page-subtitle">Visualiza toda tu carrera conectada por etapas y prerrequisitos.</p>
+          <div class="knowledge-map-container" id="knowledge-map-root"></div>
+        </section>
+
+        <!-- LEARNING TREE VIEW -->
+        <section id="view-tree" class="view-section">
+          <h1 class="page-title">Ruta de Aprendizaje Interactiva</h1>
+          <p class="page-subtitle">Teoría → Ejemplo → Práctica → Registro de Nivel de Dominio (0 a 6).</p>
+          <div id="learning-tree-root"></div>
+        </section>
+
+        <!-- LABS VIEW -->
+        <section id="view-labs" class="view-section">
+          <h1 class="page-title">CyberLabs Educativos</h1>
+          <p class="page-subtitle">Laboratorios guiados de ejecución comandos, análisis de tráfico y hardening.</p>
+          <div id="labs-root"></div>
+        </section>
+
+        <!-- QUIZZES VIEW -->
+        <section id="view-quizzes" class="view-section">
+          <h1 class="page-title">Sistema de Exámenes</h1>
+          <p class="page-subtitle">Evaluaciones estructuradas con estándar de aprobación del 80%.</p>
+          <div id="quizzes-root"></div>
+        </section>
+
+        <!-- CHALLENGES VIEW -->
+        <section id="view-challenges" class="view-section">
+          <h1 class="page-title">Retos de Razonamiento</h1>
+          <p class="page-subtitle">Análisis de escenarios complejos, cabeceras y comandos.</p>
+          <div id="challenges-root"></div>
+        </section>
+
+        <!-- SPACED REPETITION VIEW -->
+        <section id="view-spaced-repetition" class="view-section">
+          <h1 class="page-title">Errores que Cometí (Repaso Espaciado)</h1>
+          <p class="page-subtitle">Refuerza tus lagunas de conocimiento mediante programación de repaso.</p>
+          <div id="spaced-repetition-root"></div>
+        </section>
+
+        <!-- NOTES VIEW -->
+        <section id="view-notes" class="view-section">
+          <h1 class="page-title">Mis Apuntes Personales</h1>
+          <p class="page-subtitle">Tu bitácora y sección de "Lo que todavía no entiendo".</p>
+          <div id="notes-root"></div>
+        </section>
+
+        <!-- RESOURCES VIEW -->
+        <section id="view-resources" class="view-section">
+          <h1 class="page-title">Biblioteca de Recursos External</h1>
+          <p class="page-subtitle">Cursos, documentaciones y videos priorizando material en español.</p>
+          <div id="resources-root"></div>
+        </section>
+
+        <!-- CYBERTUTOR VIEW -->
+        <section id="view-cybertutor" class="view-section">
+          <div id="cybertutor-root"></div>
+        </section>
+
+        <!-- GLOSSARY VIEW -->
+        <section id="view-glossary" class="view-section">
+          <div id="glossary-root"></div>
+        </section>
+
+        <!-- TOOLS VIEW -->
+        <section id="view-tools" class="view-section">
+          <div id="tools-root"></div>
+        </section>
+
+        <!-- PROJECTS VIEW -->
+        <section id="view-projects" class="view-section">
+          <div id="projects-root"></div>
+        </section>
+
+        <!-- ROADMAPS / CAREERS VIEW -->
+        <section id="view-careers" class="view-section">
+          <div id="roadmaps-root"></div>
+        </section>
+
+        <!-- CYBERCASES VIEW -->
+        <section id="view-cases" class="view-section">
+          <div id="cases-root"></div>
+        </section>
+
+        <!-- MITRE ATTACK VIEW -->
+        <section id="view-mitre" class="view-section">
+          <div id="mitre-root"></div>
+        </section>
+
+        <!-- PLATFORM SECURITY VIEW -->
+        <section id="view-security" class="view-section">
+          <div id="security-root"></div>
+        </section>
+
+        <!-- PROFILE VIEW -->
+        <section id="view-profile" class="view-section">
+          <div id="profile-root"></div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="mobile-bottom-nav">
+      <a href="#dashboard" class="mobile-nav-item active"><span class="icon">📊</span> Dashboard</a>
+      <a href="#map" class="mobile-nav-item"><span class="icon">🗺️</span> Mapa</a>
+      <a href="#labs" class="mobile-nav-item"><span class="icon">🧪</span> Labs</a>
+      <a href="#notes" class="mobile-nav-item"><span class="icon">📓</span> Apuntes</a>
+      <a href="#cybertutor" class="mobile-nav-item"><span class="icon">🤖</span> Tutor</a>
+    </nav>
+  </div>
+
+  <!-- NODE MODAL -->
+  <div class="modal-overlay" id="node-modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="document.getElementById('node-modal').classList.remove('active')">✕</button>
+      <div id="node-modal-content"></div>
+    </div>
+  </div>
+
+  <!-- SEARCH MODAL -->
+  <div class="modal-overlay" id="search-modal">
+    <div class="modal-card">
+      <button class="modal-close" id="search-modal-close">✕</button>
+      <h3 style="font-size: 1.2rem; margin-bottom: 12px;">🔍 Búsqueda Global en CyberLab</h3>
+      <input type="text" id="global-search-input" class="chat-input" placeholder="Busca conceptos, DNS, TCP, Wireshark, Nmap..." style="width: 100%; margin-bottom: 16px;" />
+      <div id="search-results-container" style="max-height: 400px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <!-- NEW NOTE MODAL -->
+  <div class="modal-overlay" id="note-modal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="document.getElementById('note-modal').classList.remove('active')">✕</button>
+      <h3 style="font-size: 1.2rem; margin-bottom: 16px;">📓 Crear Nueva Nota Personal</h3>
+      
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Título de la Nota</label>
+        <input type="text" id="note-title-input" class="chat-input" placeholder="Ej: Handshake TCP 3 vías" style="width: 100%; margin-top: 4px;" />
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Área Téchnica</label>
+          <input type="text" id="note-area-input" class="chat-input" placeholder="Redes, Linux, Web..." style="width: 100%; margin-top: 4px;" />
+        </div>
+        <div>
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Etiquetas (separadas por coma)</label>
+          <input type="text" id="note-tags-input" class="chat-input" placeholder="TCP, Networking, CLI" style="width: 100%; margin-top: 4px;" />
+        </div>
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Contenido / Explicación Personal</label>
+        <textarea id="note-content-input" class="chat-input" rows="5" placeholder="Escribe aquí tu propia explicación..." style="width: 100%; margin-top: 4px; font-family: var(--font-sans);"></textarea>
+      </div>
+
+      <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="note-not-understood-check" />
+        <label for="note-not-understood-check" style="font-size: 0.9rem; color: var(--accent-red); font-weight: 600;">Marcar como "Lo que todavía no entiendo" (Laguna de conocimiento)</label>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-secondary" onclick="document.getElementById('note-modal').classList.remove('active')">Cancelar</button>
+        <button class="btn btn-primary" onclick="window.CyberNotes.saveNewNote()">Guardar Nota (+10 XP)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="./js/storage.js"></script>
+  <script src="./js/gamification.js"></script>
+  <script src="./js/datasets.js"></script>
+  <script src="./js/navigation.js"></script>
+  <script src="./js/dashboard.js"></script>
+  <script src="./js/knowledge_map.js"></script>
+  <script src="./js/learning_tree.js"></script>
+  <script src="./js/labs_engine.js"></script>
+  <script src="./js/quizzes_engine.js"></script>
+  <script src="./js/spaced_repetition.js"></script>
+  <script src="./js/notes_engine.js"></script>
+  <script src="./js/resources_engine.js"></script>
+  <script src="./js/cybertutor.js"></script>
+  <script src="./js/search.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>

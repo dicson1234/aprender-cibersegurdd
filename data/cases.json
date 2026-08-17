@@ -1,0 +1,42 @@
+[
+  {
+    "id": "case-01",
+    "title": "Caso Ficticio #01: La Intrusión Nocturna en Finanzas Inc.",
+    "company": "Finanzas Inc.",
+    "summary": "El domingo a las 02:15 AM, el SIEM generó alertas críticas de transferencia anómala de archivos desde un servidor interno de base de datos hacia una IP en el exterior.",
+    "logs": [
+      "2026-08-10 02:05:12 - EventID 4624 (Successful Logon) - User: jgarcia - IP: 185.220.101.5 (VPN External)",
+      "2026-08-10 02:07:45 - Sysmon Event 1 (Process Create) - powershell.exe -ArgumentList '-e aHR0cDovL2F0dGFja2VyLmNvbS9zdGFnZXIucHMx'",
+      "2026-08-10 02:10:30 - Firewall Alert - Outbound Connection TCP/443 -> IP: 185.220.101.5 (Volume: 2.4 GB)",
+      "2026-08-10 02:14:00 - Sysmon Event 11 (FileCreate) - C:\\Windows\\Temp\\vssadmin_delete.bat"
+    ],
+    "questions": [
+      {
+        "id": "c1-q1",
+        "question": "¿Cuál fue el vector inicial de acceso comprometido?",
+        "options": ["Vulnerabilidad en el sitio web público", "Credenciales robadas de la cuenta de VPN del usuario 'jgarcia'", "Infección por USB físico", "Ataque de denegación de servicio"],
+        "answer": 1,
+        "explanation": "El log de inicio de sesión EventID 4624 muestra un acceso exitoso del usuario 'jgarcia' desde una IP externa no corporativa (185.220.101.5) a través de la VPN."
+      },
+      {
+        "id": "c1-q2",
+        "question": "¿Qué acción ejecutó el atacante a través de PowerShell a las 02:07:45?",
+        "options": ["Una copia de seguridad programada", "Descarga y ejecución de un stager malicioso codificado en Base64", "Actualización de parches de Windows", "Un reinicio del sistema"],
+        "answer": 1,
+        "explanation": "La opción `-e` de PowerShell indica una cadena codificada en Base64 que decodifica hacia la URL del stager malicioso."
+      },
+      {
+        "id": "c1-q3",
+        "question": "¿Qué medida de contención inmediata debe aplicar el analista de respuesta a incidentes?",
+        "options": [
+          "Esperar al lunes por la mañana para hablar con el usuario 'jgarcia'",
+          "Desactivar inmediatamente la cuenta de VPN de 'jgarcia', aislar el host infectado y bloquear la IP 185.220.101.5 en el firewall",
+          "Formatear de inmediato el servidor web público",
+          "Aumentar el tamaño del disco duro"
+        ],
+        "answer": 1,
+        "explanation": "Revocar credenciales comprometidas, aislar la máquina de red y bloquear la IP externa detiene la exfiltración activa de datos."
+      }
+    ]
+  }
+]

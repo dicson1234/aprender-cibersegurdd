@@ -1,0 +1,82 @@
+[
+  {
+    "id": "ach-01",
+    "name": "Primer Paso en el CyberLab",
+    "icon": "🎯",
+    "description": "Completar la lectura del primer concepto teórico en la plataforma.",
+    "xpReward": 50,
+    "condition": "conceptsRead >= 1"
+  },
+  {
+    "id": "ach-02",
+    "name": "Primer Cuestionario Superado",
+    "icon": "📝",
+    "description": "Aprobar tu primer examen o cuestionario con más del 80% de aciertos.",
+    "xpReward": 100,
+    "condition": "quizzesPassed >= 1"
+  },
+  {
+    "id": "ach-03",
+    "name": "Investigador en CiberLabs",
+    "icon": "🧪",
+    "description": "Completar exitosamente tu primer laboratorio práctico guiado.",
+    "xpReward": 150,
+    "condition": "labsCompleted >= 1"
+  },
+  {
+    "id": "ach-04",
+    "name": "Racha de 7 Días",
+    "icon": "🔥",
+    "description": "Mantener una racha ininterrumpida de estudio durante 7 días consecutivos.",
+    "xpReward": 250,
+    "condition": "streakDays >= 7"
+  },
+  {
+    "id": "ach-05",
+    "name": "Dominio de Redes",
+    "icon": "🌐",
+    "description": "Alcanzar el nivel de dominio 'Dominado' (Nivel 5/6) en todos los conceptos del módulo de Redes.",
+    "xpReward": 300,
+    "condition": "networkingMastered == true"
+  },
+  {
+    "id": "ach-06",
+    "name": "Dominio de Linux",
+    "icon": "🐧",
+    "description": "Alcanzar el nivel de dominio en conceptos fundamentales de Linux.",
+    "xpReward": 300,
+    "condition": "linuxMastered == true"
+  },
+  {
+    "id": "ach-07",
+    "name": "Primer Análisis Forense",
+    "icon": "🔍",
+    "description": "Resolver exitosamente un reto de análisis de logs o investigación de casos.",
+    "xpReward": 200,
+    "condition": "challengesCompleted >= 1"
+  },
+  {
+    "id": "ach-08",
+    "name": "Bitácora Personal",
+    "icon": "📓",
+    "description": "Crear y guardar al menos 5 notas explicativas personales en 'Mis Apuntes'.",
+    "xpReward": 100,
+    "condition": "notesCount >= 5"
+  },
+  {
+    "id": "ach-09",
+    "name": "Aprendiz Honesto",
+    "icon": "💡",
+    "description": "Registrar tu primer fallo en 'Errores que cometí' para activar la repetición espaciada.",
+    "xpReward": 75,
+    "condition": "mistakesLogged >= 1"
+  },
+  {
+    "id": "ach-10",
+    "name": "Guardián de la Plataforma",
+    "icon": "🛡️",
+    "description": "Exportar una copia de seguridad de tu progreso en formato JSON.",
+    "xpReward": 150,
+    "condition": "backupExported == true"
+  }
+]

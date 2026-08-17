@@ -1,0 +1,87 @@
+[
+  {
+    "tactic": "Reconnaissance (Reconocimiento)",
+    "description": "Tácticas para recopilar información que se utiliza para planificar futuras operaciones adversas.",
+    "techniques": [
+      {
+        "id": "T1595",
+        "name": "Active Scanning",
+        "desc": "Escaneo activo de IP, puertos y vulnerabilidades utilizando herramientas como Nmap.",
+        "detection": "Alertas de firewall por escaneos de puertos y múltiples conexiones rechazadas.",
+        "mitigation": "Filtrado estricto de tráfico entrante y limitación de servicios expuestos."
+      }
+    ]
+  },
+  {
+    "tactic": "Initial Access (Acceso Inicial)",
+    "description": "Tácticas para obtener una entrada inicial dentro de la red de la organización.",
+    "techniques": [
+      {
+        "id": "T1566",
+        "name": "Phishing",
+        "desc": "Envío de correos electrónicos maliciosos con enlaces o adjuntos infectados.",
+        "detection": "Filtros de correo (SPF, DKIM, DMARC), inspección de adjuntos y análisis de comportamiento de enlaces.",
+        "mitigation": "Concientización del personal, autenticación MFA y filtrado web antiphishing."
+      },
+      {
+        "id": "T1190",
+        "name": "Exploit Public-Facing Application",
+        "desc": "Aprovechamiento de vulnerabilidades en aplicaciones web o servicios expuestos a Internet.",
+        "detection": "WAF (Web Application Firewall) e inspección de logs de servidores web.",
+        "mitigation": "Gestión activa de parches y bastionado de servidores web."
+      }
+    ]
+  },
+  {
+    "tactic": "Execution (Ejecución)",
+    "description": "Tácticas que provocan la ejecución de código controlado por el adversario en un sistema local o remoto.",
+    "techniques": [
+      {
+        "id": "T1059.001",
+        "name": "Command and Scripting Interpreter: PowerShell",
+        "desc": "Uso del entorno de comandos PowerShell para ejecutar scripts, comandos ofuscados y descargar cargas útiles.",
+        "detection": "Sysmon Event ID 1 / Script Block Logging (Event ID 4104).",
+        "mitigation": "Restringir PowerShell mediante Constrained Language Mode y políticas de ejecución firmadas."
+      }
+    ]
+  },
+  {
+    "tactic": "Persistence (Persistencia)",
+    "description": "Tácticas empleadas para mantener el acceso a los sistemas a través de reinicios o cambios de credenciales.",
+    "techniques": [
+      {
+        "id": "T1547.001",
+        "name": "Boot or Logon Autostart Execution: Registry Run Keys",
+        "desc": "Adición de claves ejecutoras en el Registro de Windows (HKLM/HKCU Run).",
+        "detection": "Sysmon Event ID 12/13 (Registro) y monitoreo de claves de inicio.",
+        "mitigation": "Restricción de permisos de edición en el Registro de Windows."
+      }
+    ]
+  },
+  {
+    "tactic": "Credential Access (Acceso a Credenciales)",
+    "description": "Tácticas para robar credenciales como nombres de usuario y contraseñas.",
+    "techniques": [
+      {
+        "id": "T1003",
+        "name": "OS Credential Dumping",
+        "desc": "Extracción de credenciales de la memoria del proceso LSASS en Windows.",
+        "detection": "Alertas de EDR por lectura del proceso `lsass.exe` por ejecutables no autorizados.",
+        "mitigation": "Habilitar LSA Protection (RunAsPPL) y Credential Guard en Windows 11."
+      }
+    ]
+  },
+  {
+    "tactic": "Defense Evasion (Evasión de Defensas)",
+    "description": "Tácticas empleadas por los adversarios para evitar ser detectados durante su intrusión.",
+    "techniques": [
+      {
+        "id": "T1070",
+        "name": "Indicator Removal: Clear Windows Event Logs",
+        "desc": "Borrado deliberado de registros de eventos para eliminar evidencia forense.",
+        "detection": "Event ID 1102 (Security log cleared) en el registro de auditoría de Windows.",
+        "mitigation": "Envío inmediato de logs en tiempo real a un servidor SIEM externo inmutable."
+      }
+    ]
+  }
+]

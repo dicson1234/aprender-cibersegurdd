@@ -1,0 +1,65 @@
+/* CyberLab Design System Tokens & Dark Theme Variables */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Color Palette - Sage Green & Petroleum Theme */
+  --bg-dark: #182321;
+  --bg-sidebar: #20312E;
+  --bg-card: #263936;
+  --bg-card-hover: #2D413D;
+  --bg-surface: #2D413D;
+  --bg-glass: rgba(38, 57, 54, 0.85);
+
+  --border-color: #3B514C;
+  --border-focus: #79A99D;
+
+  --accent-cyan: #79A99D;
+  --accent-blue: #8DBBAF;
+  --accent-green: #7EAE86;
+  --accent-yellow: #C5A96B;
+  --accent-orange: #C69A68;
+  --accent-red: #B97878;
+  --accent-purple: #79A99D;
+
+  --text-main: #E8EFEC;
+  --text-muted: #AABBB6;
+  --text-dim: #AABBB6;
+
+  /* Status Colors */
+  --status-not-started: #B97878;
+  --status-in-progress: #C69A68;
+  --status-learned: #7EAE86;
+  --status-mastered: #79A99D;
+  --status-locked: #3B514C;
+
+  /* Gradients */
+  --gradient-cyber: linear-gradient(135deg, #79A99D 0%, #8DBBAF 100%);
+  --gradient-green: linear-gradient(135deg, #7EAE86 0%, #3B514C 100%);
+  --gradient-purple: linear-gradient(135deg, #79A99D 0%, #2D413D 100%);
+  --gradient-card: linear-gradient(180deg, rgba(45, 65, 61, 0.6) 0%, rgba(38, 57, 54, 0.9) 100%);
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing & Radius */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-full: 9999px;
+
+  /* Shadows & Effects */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(0, 242, 254, 0.25);
+  --shadow-glow-purple: 0 0 20px rgba(163, 113, 247, 0.25);
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+
+  /* Layout dimensions */
+  --sidebar-width: 260px;
+  --header-height: 64px;
+  --mobile-nav-height: 64px;
+}
