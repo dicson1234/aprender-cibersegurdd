@@ -1,81 +1,198 @@
-/* CyberLab CyberTutor — Gemini text backend for Cloudflare Workers
- * Secret required: GEMINI_API_KEY
- * Optional secret: GLADIA_API_KEY for the existing voice flow.
- * Never put API keys in the Git repository or frontend.
- */
+const GEMINI_MODELS = [
+  'gemini-3.6-flash',
+  'gemini-2.5-flash'
+];
 
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+const SYSTEM_PROMPT = `Eres CyberTutor, el tutor personal de ciberseguridad de CyberLab.
 
-function corsHeaders(origin) {
-  const allowed = origin && /^https:\/\/([a-z0-9-]+\.)?dicson1234\.github\.io$/i.test(origin)
-    ? origin : 'https://dicson1234.github.io';
+Tu objetivo es enseñar, no simplemente responder.
+
+Responde siempre en español.
+
+Explica primero de forma sencilla y después profundiza.
+
+Utiliza ejemplos prácticos.
+
+Relaciona los conceptos con ciberseguridad real.
+
+Adapta la dificultad al nivel del estudiante.
+
+Utiliza su progreso, errores y conceptos dominados para personalizar las explicaciones.
+
+Cuando sea apropiado:
+1. Explica el concepto.
+2. Da un ejemplo.
+3. Comprueba comprensión.
+4. Propón una práctica segura.
+5. Recomienda qué estudiar después.
+
+Para contenidos ofensivos, mantén el aprendizaje dentro de laboratorios autorizados, CTFs, máquinas propias y entornos educativos.
+
+No inventes información.`;
+
+function getCorsHeaders(origin) {
+  const isAllowed = origin && /^https:\/\/([a-z0-9-]+\.)?dicson1234\.github\.io\/?$/i.test(origin);
+  const allowOrigin = isAllowed ? origin : 'https://dicson1234.github.io';
   return {
-    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Vary': 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
+    'Vary': 'Origin'
   };
 }
 
-function json(data, status, origin) {
+function jsonResponse(data, status = 200, origin = '') {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders(origin) }
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      ...getCorsHeaders(origin)
+    }
   });
 }
 
-function systemInstruction(student) {
-  return `Eres CyberTutor, el tutor personal de CyberLab. Enseñas ciberseguridad de forma progresiva, clara y práctica.\n\nREGLAS PEDAGÓGICAS:\n1. Responde en español salvo que el estudiante pida otro idioma.\n2. Explica primero de forma sencilla y después aumenta la profundidad técnica cuando corresponda.\n3. Da ejemplos seguros y educativos, preferiblemente en laboratorios aislados o sistemas propios.\n4. Relaciona la respuesta con el nivel, progreso, errores y objetivos del estudiante.\n5. Si detectas una laguna de conocimiento, enséñala antes de seguir.\n6. Cuando sea útil, termina con una mini-pregunta, ejercicio o siguiente paso.\n7. No inventes datos ni afirmes haber ejecutado herramientas que no ejecutaste.\n8. Para contenidos potencialmente peligrosos, mantén el enfoque defensivo, educativo y en entornos autorizados.\n\nPERFIL ACTUAL DEL ESTUDIANTE:\n${JSON.stringify(student || {}, null, 2)}`;
+function formatStudentContext(student = {}) {
+  return JSON.stringify({
+    level: student.level ?? 1,
+    xp: student.xp ?? 0,
+    streak: student.streak ?? 0,
+    hoursStudied: student.hoursStudied ?? 0,
+    currentModule: student.currentModule ?? '',
+    primaryObjective: student.primaryObjective ?? '',
+    secondaryObjective: student.secondaryObjective ?? '',
+    mastery: student.mastery ?? {},
+    mistakes: Array.isArray(student.mistakes) ? student.mistakes.slice(-20) : [],
+    completedModules: Array.isArray(student.completedModules) ? student.completedModules.slice(-30) : []
+  }, null, 2);
 }
 
-export default {
-  async fetch(request, env) {
-    const origin = request.headers.get('Origin');
-    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(origin) });
-    const pathname = new URL(request.url).pathname;
-    if (pathname !== '/api/cybertutor') return json({ error: 'Not found' }, 404, origin);
-    if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405, origin);
-    if (!env.GEMINI_API_KEY) return json({ error: 'Servidor sin GEMINI_API_KEY configurada.' }, 500, origin);
+async function callGemini(apiKey, payload) {
+  let lastError = null;
+  let lastStatus = 502;
 
+  for (const modelName of GEMINI_MODELS) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
     try {
-      const contentType = request.headers.get('Content-Type') || '';
-      if (contentType.startsWith('multipart/form-data')) {
-        return json({ error: 'Este Worker usa Gemini para el chat de texto. Mantén el Worker de Gladia para voz.' }, 400, origin);
-      }
-
-      const body = await request.json();
-      const message = typeof body?.message === 'string' ? body.message.trim() : '';
-      if (!message) return json({ error: 'Falta el mensaje.' }, 400, origin);
-      if (message.length > 12000) return json({ error: 'El mensaje es demasiado largo.' }, 413, origin);
-
-      const student = body?.student || {};
-      const payload = {
-        system_instruction: { parts: [{ text: systemInstruction(student) }] },
-        contents: [{ role: 'user', parts: [{ text: message }] }],
-        generationConfig: { temperature: 0.65, maxOutputTokens: 1800 }
-      };
-
-      const response = await fetch(GEMINI_URL, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-goog-api-key': env.GEMINI_API_KEY
+          'x-goog-api-key': apiKey
         },
         body: JSON.stringify(payload)
       });
 
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        console.error('Gemini error', response.status, data);
-        return json({ error: `Gemini respondió con HTTP ${response.status}.` }, response.status >= 500 ? 502 : response.status, origin);
+      const data = await response.json().catch(() => null);
+
+      if (response.ok && data?.candidates?.[0]?.content?.parts) {
+        const answer = data.candidates[0].content.parts
+          .map(p => p.text || '')
+          .join('')
+          .trim();
+
+        if (answer) {
+          return { ok: true, answer, model: modelName };
+        }
       }
 
-      const answer = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('')?.trim();
-      if (!answer) return json({ error: 'Gemini no devolvió texto.' }, 502, origin);
-      return json({ answer, provider: 'google-gemini', model: 'gemini-2.5-flash' }, 200, origin);
-    } catch (error) {
-      console.error(error);
-      return json({ error: 'Error interno de CyberTutor.' }, 500, origin);
+      console.error(`Gemini model ${modelName} status ${response.status}:`, data);
+      lastStatus = response.status >= 500 ? 502 : response.status;
+      lastError = data?.error?.message || `HTTP ${response.status}`;
+    } catch (err) {
+      console.error(`Error with model ${modelName}:`, err);
+      lastError = err.message;
     }
+  }
+
+  return { ok: false, status: lastStatus, error: lastError || 'Gemini no pudo procesar la solicitud.' };
+}
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const origin = request.headers.get('Origin') || '';
+    const pathname = url.pathname;
+
+    // OPTIONS Handling for CORS
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
+    }
+
+    // GET /
+    if (pathname === '/' && request.method === 'GET') {
+      return jsonResponse({
+        status: 'ok',
+        message: 'CyberTutor Worker funcionando'
+      }, 200, origin);
+    }
+
+    // GET /api/cybertutor
+    if (pathname === '/api/cybertutor' && request.method === 'GET') {
+      return jsonResponse({
+        status: 'ok',
+        message: 'CyberTutor endpoint disponible. Utiliza POST.'
+      }, 200, origin);
+    }
+
+    // Route matching for POST /api/cybertutor
+    if (pathname !== '/api/cybertutor') {
+      return jsonResponse({ error: 'Ruta no encontrada.', endpoint: pathname }, 404, origin);
+    }
+
+    if (request.method !== 'POST') {
+      return jsonResponse({ error: 'Método no permitido. Utiliza POST.' }, 405, origin);
+    }
+
+    // Check GEMINI_API_KEY secret
+    if (!env.GEMINI_API_KEY) {
+      return jsonResponse({ error: 'GEMINI_API_KEY no está configurada en Cloudflare.' }, 500, origin);
+    }
+
+    // Parse JSON body
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return jsonResponse({ error: 'El cuerpo de la solicitud debe ser un JSON válido.' }, 400, origin);
+    }
+
+    const message = typeof body?.message === 'string' ? body.message.trim() : '';
+    if (!message) {
+      return jsonResponse({ error: 'El campo message es obligatorio.' }, 400, origin);
+    }
+
+    if (message.length > 12000) {
+      return jsonResponse({ error: 'La pregunta es demasiado larga.' }, 413, origin);
+    }
+
+    const studentContextStr = formatStudentContext(body?.student || {});
+    const fullSystemInstruction = `${SYSTEM_PROMPT}\n\nContexto actual del estudiante:\n${studentContextStr}`;
+
+    const geminiPayload = {
+      system_instruction: {
+        parts: [{ text: fullSystemInstruction }]
+      },
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: message }]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.65,
+        maxOutputTokens: 1800
+      }
+    };
+
+    const res = await callGemini(env.GEMINI_API_KEY, geminiPayload);
+    if (!res.ok) {
+      return jsonResponse({ error: res.error }, res.status, origin);
+    }
+
+    return jsonResponse({
+      answer: res.answer,
+      provider: 'google-gemini',
+      model: res.model
+    }, 200, origin);
   }
 };

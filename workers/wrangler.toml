@@ -1,4 +1,4 @@
-name = "cyberlab-cybertutor"
+name = "cyberla-cybertutor"
 main = "cybertutor-gemini.js"
 compatibility_date = "2026-08-17"
 
