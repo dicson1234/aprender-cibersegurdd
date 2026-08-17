@@ -8,6 +8,7 @@ const ACTIVE_ACCOUNT_KEY = 'cyberlab_active_account_v1';
 const accountDefaults = {
   avatar: '',
   bio: '',
+  privateProfile: true,
   createdAt: new Date().toISOString()
 };
 
@@ -26,23 +27,16 @@ class AccountsManager {
   loadAccounts() {
     try {
       const parsed = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]');
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map(a => ({ ...accountDefaults, ...a, privateProfile: a.privateProfile !== false }));
     } catch { return []; }
   }
 
-  saveAccounts() {
-    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(this.accounts));
-  }
+  saveAccounts() { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(this.accounts)); }
 
   ensureMigration() {
     if (this.accounts.length || !localStorage.getItem('cyberlab_user_data_v1')) return;
-    const account = {
-      id: `user-${crypto.randomUUID()}`,
-      username: 'Usuario',
-      pinHash: '',
-      ...accountDefaults,
-      migratedFromLegacy: true
-    };
+    const account = { id: `user-${crypto.randomUUID()}`, username: 'Usuario', pinHash: '', ...accountDefaults, migratedFromLegacy: true };
     this.accounts.push(account);
     this.saveAccounts();
     this.activeId = account.id;
@@ -72,10 +66,7 @@ class AccountsManager {
     const card = document.getElementById('accounts-card');
     if (!card) return;
     const active = this.getActive();
-    if (active) {
-      this.hideGate();
-      return;
-    }
+    if (active) { this.hideGate(); return; }
     const accounts = this.accounts;
     card.innerHTML = `
       <div style="text-align:center;margin-bottom:20px">
@@ -86,10 +77,10 @@ class AccountsManager {
       ${accounts.length ? `<h3 style="margin-bottom:10px">Tus perfiles</h3><div style="display:grid;gap:10px;margin-bottom:18px">${accounts.map(a => `
         <button data-login="${a.id}" class="btn btn-secondary" style="width:100%;display:flex;align-items:center;gap:12px;justify-content:flex-start;padding:12px">
           ${a.avatar ? `<img src="${a.avatar}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover">` : '<span style="font-size:1.8rem">👤</span>'}
-          <span><strong>${this.escape(a.username)}</strong><small style="display:block;color:var(--text-muted)">Perfil local</small></span>
+          <span><strong>${this.escape(a.username)}</strong><small style="display:block;color:var(--text-muted)">${a.pinHash ? '🔒 Perfil protegido' : '🔐 Perfil local'}</small></span>
         </button>`).join('')}</div>` : ''}
       <button id="new-account-btn" class="btn btn-primary" style="width:100%;justify-content:center">➕ Crear nuevo usuario</button>
-      <p style="font-size:.75rem;color:var(--text-muted);margin-top:14px;text-align:center">Las cuentas de esta versión son locales al navegador. No suben tus datos a GitHub ni a CyberLab.</p>
+      <p style="font-size:.75rem;color:var(--text-muted);margin-top:14px;text-align:center">Los perfiles y las fotos se guardan en este navegador. No se publican en GitHub ni en una página pública de CyberLab.</p>
     `;
     card.querySelectorAll('[data-login]').forEach(btn => btn.addEventListener('click', () => this.login(btn.dataset.login)));
     card.querySelector('#new-account-btn').addEventListener('click', () => this.renderCreate());
@@ -148,7 +139,7 @@ class AccountsManager {
     if (!name) return alert('Escribe un nombre de usuario.');
     if (this.accounts.some(a => a.username.toLowerCase() === name.toLowerCase())) return alert('Ese nombre ya existe en este dispositivo.');
     if (pin && (pin.length < 4 || pin.length > 12)) return alert('El PIN debe tener entre 4 y 12 caracteres.');
-    const account = { id: `user-${crypto.randomUUID()}`, username: name, pinHash: await this.hashPin(pin), avatar: this.pendingAvatar || '', bio: '', createdAt: new Date().toISOString() };
+    const account = { id: `user-${crypto.randomUUID()}`, username: name, pinHash: await this.hashPin(pin), avatar: this.pendingAvatar || '', bio: '', privateProfile: true, createdAt: new Date().toISOString() };
     this.accounts.push(account); this.saveAccounts(); this.pendingAvatar = '';
     await this.select(account);
   }
@@ -172,10 +163,7 @@ class AccountsManager {
     if (this._resolveReady) this._resolveReady(account);
   }
 
-  hideGate() {
-    const gate = document.getElementById('accounts-gate');
-    if (gate) gate.style.display = 'none';
-  }
+  hideGate() { const gate = document.getElementById('accounts-gate'); if (gate) gate.style.display = 'none'; }
 
   async logout() {
     this.activeId = null;
@@ -185,13 +173,22 @@ class AccountsManager {
     if (gate) { gate.style.display = 'flex'; this.renderSelection(); }
   }
 
-  updateActiveProfile({ username, avatar, bio }) {
+  updateActiveProfile({ username, avatar, bio, privateProfile }) {
     const account = this.getActive(); if (!account) return;
     if (username?.trim()) account.username = username.trim().slice(0, 24);
     if (avatar !== undefined) account.avatar = avatar;
     if (bio !== undefined) account.bio = bio.slice(0, 180);
+    if (privateProfile !== undefined) account.privateProfile = Boolean(privateProfile);
     this.saveAccounts();
     window.dispatchEvent(new CustomEvent('cyberlab_account_changed', { detail: account }));
+  }
+
+  setPrivacy(isPrivate) {
+    const account = this.getActive(); if (!account) return;
+    account.privateProfile = Boolean(isPrivate);
+    this.saveAccounts();
+    window.dispatchEvent(new CustomEvent('cyberlab_account_changed', { detail: account }));
+    return account;
   }
 
   escape(value) { return String(value).replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c])); }
