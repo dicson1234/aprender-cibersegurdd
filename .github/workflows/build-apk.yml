@@ -35,8 +35,16 @@ jobs:
         run: |
           mkdir -p dist
           cp -r css js data assets index.html manifest.json sw.js dist/ || true
-          npx cap add android
+          npx cap add android || true
           npx cap sync android
+          python3 -c "
+with open('android/app/build.gradle', 'r') as f:
+    c = f.read()
+if 'kotlin-stdlib-jdk7' not in c:
+    c = c.replace('dependencies {', 'configurations.all {\n        resolutionStrategy {\n            exclude group: \"org.jetbrains.kotlin\", module: \"kotlin-stdlib-jdk7\"\n            exclude group: \"org.jetbrains.kotlin\", module: \"kotlin-stdlib-jdk8\"\n        }\n    }\n\ndependencies {')
+    with open('android/app/build.gradle', 'w') as f:
+        f.write(c)
+"
 
       - name: Build APK (Debug)
         run: |
