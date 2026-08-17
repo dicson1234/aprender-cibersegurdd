@@ -1,6 +1,6 @@
 {
   "appId": "com.dicson.cyberlab",
   "appName": "CyberLab",
-  "webDir": ".",
+  "webDir": "dist",
   "bundledWebRuntime": false
 }

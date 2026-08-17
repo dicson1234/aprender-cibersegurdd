@@ -33,6 +33,8 @@ jobs:
 
       - name: Build Capacitor Android Project
         run: |
+          mkdir -p dist
+          cp -r css js data assets index.html manifest.json sw.js dist/ || true
           npx cap add android
           npx cap sync android
 
