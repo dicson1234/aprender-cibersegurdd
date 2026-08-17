@@ -1,34 +1,30 @@
 const GEMINI_MODELS = [
   'gemini-3.6-flash',
-  'gemini-2.5-flash'
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash'
 ];
 
 const SYSTEM_PROMPT = `Eres CyberTutor, el tutor personal de ciberseguridad de CyberLab.
 
-Tu objetivo es enseñar, no simplemente responder.
+OBJETIVO PRINCIPAL:
+Enseñar ciberseguridad de forma fluida, interactiva, progresiva y conversacional.
 
-Responde siempre en español.
-
-Explica primero de forma sencilla y después profundiza.
-
-Utiliza ejemplos prácticos.
-
-Relaciona los conceptos con ciberseguridad real.
-
-Adapta la dificultad al nivel del estudiante.
-
-Utiliza su progreso, errores y conceptos dominados para personalizar las explicaciones.
-
-Cuando sea apropiado:
-1. Explica el concepto.
-2. Da un ejemplo.
-3. Comprueba comprensión.
-4. Propón una práctica segura.
-5. Recomienda qué estudiar después.
-
-Para contenidos ofensivos, mantén el aprendizaje dentro de laboratorios autorizados, CTFs, máquinas propias y entornos educativos.
-
-No inventes información.`;
+REGLAS DE INTERACCIÓN Y CONVERSACIÓN:
+1. RESPONDE SIEMPRE EN ESPAÑOL.
+2. MANTÉN EL HILO Y CONTEXTO DE LA CONVERSACIÓN:
+   - Si el estudiante está respondiendo a una pregunta previa o ejercicio, evalúa de inmediato su respuesta (dile si es correcta o no y por qué).
+   - Si el estudiante hace una pregunta de seguimiento, contéstala directamente sin repetir introducciones anteriores.
+3. ADAPTA EL FORMATO SEGÚN EL TIPO DE MENSAJE:
+   - NO uses plantillas ni esquemas rígidos de 5 o 6 pasos para CADA mensaje.
+   - Para explicaciones de conceptos nuevos por primera vez: explica sencillo, pon un ejemplo cotidiano y conéctalo con ciberseguridad real.
+   - Para respuestas breves, dudas puntuales o continuación del diálogo: sé directo, claro y conversacional.
+4. PEDAGOGÍA Y PRÁCTICA:
+   - Anima al estudiante a pensar y participar.
+   - Cuando sea oportuno, termina proponiendo una pregunta corta o un comando/ejercicio práctico seguro.
+5. CIBERSEGURIDAD RESPONSABLE:
+   - Para temas ofensivos o de hacking, mantén el aprendizaje dentro de entornos autorizados, CTFs, máquinas propias y laboratorios de práctica.
+   - No inventes información.`;
 
 function getCorsHeaders(origin) {
   const isAllowed = origin && /^https:\/\/([a-z0-9-]+\.)?dicson1234\.github\.io\/?$/i.test(origin);
@@ -66,41 +62,100 @@ function formatStudentContext(student = {}) {
   }, null, 2);
 }
 
+function buildGeminiContents(rawHistory, currentMessage) {
+  const turns = [];
+
+  if (Array.isArray(rawHistory)) {
+    for (const item of rawHistory) {
+      const role = (item.role === 'assistant' || item.role === 'model' || item.role === 'tutor') ? 'model' : 'user';
+      const text = typeof item.content === 'string' ? item.content : (typeof item.text === 'string' ? item.text : '');
+      if (text.trim()) {
+        turns.push({
+          role,
+          parts: [{ text: text.trim() }]
+        });
+      }
+    }
+  }
+
+  // Check if currentMessage is already the last turn
+  const lastTurn = turns[turns.length - 1];
+  if (!lastTurn || lastTurn.role !== 'user' || lastTurn.parts[0]?.text !== currentMessage.trim()) {
+    turns.push({
+      role: 'user',
+      parts: [{ text: currentMessage.trim() }]
+    });
+  }
+
+  // Ensure roles strictly alternate: user, model, user, model...
+  const validContents = [];
+  let lastRole = null;
+  for (const turn of turns) {
+    if (turn.role !== lastRole) {
+      validContents.push(turn);
+      lastRole = turn.role;
+    } else {
+      // Append text to previous turn if same role
+      const prev = validContents[validContents.length - 1];
+      prev.parts[0].text += '\n' + turn.parts[0].text;
+    }
+  }
+
+  // Gemini API requires first turn to have role 'user'
+  while (validContents.length > 0 && validContents[0].role !== 'user') {
+    validContents.shift();
+  }
+
+  return validContents.length > 0 ? validContents : [{ role: 'user', parts: [{ text: currentMessage.trim() }] }];
+}
+
 async function callGemini(apiKey, payload) {
   let lastError = null;
   let lastStatus = 502;
 
   for (const modelName of GEMINI_MODELS) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey
-        },
-        body: JSON.stringify(payload)
-      });
+    
+    // Attempt up to 2 times for each model (retry on 503 / transient server errors)
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
+          body: JSON.stringify(payload)
+        });
 
-      const data = await response.json().catch(() => null);
+        const data = await response.json().catch(() => null);
 
-      if (response.ok && data?.candidates?.[0]?.content?.parts) {
-        const answer = data.candidates[0].content.parts
-          .map(p => p.text || '')
-          .join('')
-          .trim();
+        if (response.ok && data?.candidates?.[0]?.content?.parts) {
+          const answer = data.candidates[0].content.parts
+            .map(p => p.text || '')
+            .join('')
+            .trim();
 
-        if (answer) {
-          return { ok: true, answer, model: modelName };
+          if (answer) {
+            return { ok: true, answer, model: modelName };
+          }
         }
-      }
 
-      console.error(`Gemini model ${modelName} status ${response.status}:`, data);
-      lastStatus = response.status >= 500 ? 502 : response.status;
-      lastError = data?.error?.message || `HTTP ${response.status}`;
-    } catch (err) {
-      console.error(`Error with model ${modelName}:`, err);
-      lastError = err.message;
+        console.error(`Gemini model ${modelName} (attempt ${attempt + 1}) status ${response.status}:`, data);
+        lastStatus = response.status >= 500 ? 502 : response.status;
+        lastError = data?.error?.message || `HTTP ${response.status}`;
+
+        if (response.status === 503 || response.status === 429) {
+          // Wait 600ms before retry
+          await new Promise(r => setTimeout(r, 600));
+        } else {
+          break; // Non-retriable status (e.g. 404 or 400)
+        }
+      } catch (err) {
+        console.error(`Fetch error model ${modelName}:`, err);
+        lastError = err.message;
+        await new Promise(r => setTimeout(r, 400));
+      }
     }
   }
 
@@ -168,18 +223,15 @@ export default {
     const studentContextStr = formatStudentContext(body?.student || {});
     const fullSystemInstruction = `${SYSTEM_PROMPT}\n\nContexto actual del estudiante:\n${studentContextStr}`;
 
+    const contents = buildGeminiContents(body?.history, message);
+
     const geminiPayload = {
       system_instruction: {
         parts: [{ text: fullSystemInstruction }]
       },
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: message }]
-        }
-      ],
+      contents: contents,
       generationConfig: {
-        temperature: 0.65,
+        temperature: 0.7,
         maxOutputTokens: 1800
       }
     };
