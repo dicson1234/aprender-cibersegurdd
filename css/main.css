@@ -246,35 +246,42 @@ html, body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: var(--mobile-nav-height);
-  background: var(--bg-card);
-  border-top: 1px solid var(--border-color);
+  height: calc(var(--mobile-nav-height) + 12px); /* Taller for mobile */
+  background: rgba(38, 57, 54, 0.85); /* Matches var(--bg-card) but with transparency */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(121, 169, 157, 0.2);
   z-index: 100;
   justify-content: space-around;
   align-items: center;
-  padding: 0 8px;
+  padding: 4px 8px;
+  padding-bottom: env(safe-area-inset-bottom); /* iOS safe area */
 }
 
 .mobile-nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: 4px;
   color: var(--text-muted);
   text-decoration: none;
   font-size: 0.75rem;
   font-weight: 500;
-  padding: 6px;
-  border-radius: var(--radius-sm);
+  min-width: 60px;
+  min-height: 50px; /* Larger tap target */
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
   cursor: pointer;
 }
 
 .mobile-nav-item.active {
   color: var(--accent-cyan);
+  background: rgba(121, 169, 157, 0.15); /* Soft highlight on active */
 }
 
 .mobile-nav-item .icon {
-  font-size: 1.2rem;
+  font-size: 1.4rem; /* Larger icon for easy tapping */
 }
 
 /* Modal Overlay */
