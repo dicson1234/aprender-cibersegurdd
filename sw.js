@@ -1,5 +1,5 @@
 /* CyberLab Offline-First Service Worker */
-const CACHE_NAME = 'cyberlab-v11-mobile-circuit-ai';
+const CACHE_NAME = 'cyberlab-v12-onboarding-ai-hardening';
 const ASSETS = [
   './','./index.html','./manifest.json','./icon.svg',
   './css/variables.css?v=5','./css/main.css?v=5','./css/components.css?v=5','./css/mobile.css?v=5','./css/mobile-polish.css?v=2',
