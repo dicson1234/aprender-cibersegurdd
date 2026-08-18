@@ -58,8 +58,12 @@ class CyberLabApp {
     ];
 
     try {
-      const responses = await Promise.all(files.map(f => fetch(`./data/${f}.json`)));
-      const jsons = await Promise.all(responses.map(r => r.ok ? r.json() : null));
+      const responses = await Promise.all(
+        files.map(f => fetch(`./data/${f}.json`).catch(() => null))
+      );
+      const jsons = await Promise.all(
+        responses.map(r => (r && r.ok) ? r.json().catch(() => null) : null)
+      );
       
       window.CyberData = window.CyberData || {};
       files.forEach((f, index) => {
@@ -679,6 +683,14 @@ class CyberLabApp {
       navigator.serviceWorker.register('./sw.js').then(reg => {
         reg.update();
       }).catch(err => console.log('SW registration skipped:', err));
+
+      if (!this._swListenerAttached) {
+        this._swListenerAttached = true;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('🔄 Nuevo Service Worker activo, recargando...');
+          window.location.reload();
+        });
+      }
     }
   }
 }
