@@ -66,13 +66,25 @@ function isOriginAllowed(origin) {
          origin.startsWith('file://');
 }
 
+function isSafeAvatarUrl(value) {
+  if (typeof value !== 'string') return false;
+  if (!value) return true;
+  if (value.startsWith('data:image/')) return /^data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(value);
+  if (value.startsWith('https://')) return true;
+  return value.length > 0 && value.length <= 16 && !/[<>"'`]/.test(value);
+}
+
 function getCorsHeaders(origin) {
   const safeOrigin = isOriginAllowed(origin) ? origin : 'https://dicson1234.github.io';
   return {
     'Access-Control-Allow-Origin': safeOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-User-Token',
-    'Vary': 'Origin'
+    'Vary': 'Origin',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'geolocation=(), camera=(), microphone=()'
   };
 }
 
@@ -84,6 +96,21 @@ function jsonResponse(data, status = 200, origin = '') {
       ...getCorsHeaders(origin)
     }
   });
+}
+
+// --- Rate Limiter Manager ---
+async function checkRateLimit(env, key, maxRequests = 10, windowSeconds = 60) {
+  if (!env.CYBERLAB_KV) return true;
+  const kvKey = `ratelimit:${key}`;
+  const record = await env.CYBERLAB_KV.get(kvKey, { type: 'json' }) || { count: 0, resetAt: Date.now() + (windowSeconds * 1000) };
+  if (Date.now() > record.resetAt) {
+    record.count = 1;
+    record.resetAt = Date.now() + (windowSeconds * 1000);
+  } else {
+    record.count += 1;
+  }
+  await env.CYBERLAB_KV.put(kvKey, JSON.stringify(record), { expirationTtl: windowSeconds });
+  return record.count <= maxRequests;
 }
 
 // --- KV Storage Managers ---
@@ -271,17 +298,22 @@ export default {
 
     // AUTH API: Register
     if (pathname === '/api/auth/register' && request.method === 'POST') {
+      const clientIp = request.headers.get('CF-Connecting-IP') || 'global';
+      const allowed = await checkRateLimit(env, `register:${clientIp}`, 5, 300);
+      if (!allowed) return jsonResponse({ error: 'Demasiados intentos de registro. Intenta más tarde.' }, 429, origin);
+
       let body;
       try { body = await request.json(); } catch { return jsonResponse({ error: 'JSON inválido' }, 400, origin); }
 
-      const username = String(body.username || '').trim();
-      const email = String(body.email || username).trim().toLowerCase();
+      const username = String(body.username || '').trim().slice(0, 24);
+      const email = String(body.email || username).trim().toLowerCase().slice(0, 80);
       const password = String(body.password || body.pin || '').trim();
-      const avatar = String(body.avatar || '');
-      const bio = String(body.bio || '');
+      const avatar = String(body.avatar || '🛡️');
+      const bio = String(body.bio || '').slice(0, 200);
 
       if (!username || username.length < 2) return jsonResponse({ error: 'El nombre de usuario debe tener al menos 2 caracteres.' }, 400, origin);
       if (!password || password.length < 4) return jsonResponse({ error: 'La contraseña o PIN debe tener al menos 4 caracteres.' }, 400, origin);
+      if (!isSafeAvatarUrl(avatar)) return jsonResponse({ error: 'Formato o URL de foto de perfil no permitida.' }, 400, origin);
 
       const existingId = await findUserIdByIdentifier(env, username) || await findUserIdByIdentifier(env, email);
       if (existingId) {
@@ -313,6 +345,10 @@ export default {
 
     // AUTH API: Login
     if (pathname === '/api/auth/login' && request.method === 'POST') {
+      const clientIp = request.headers.get('CF-Connecting-IP') || 'global';
+      const allowed = await checkRateLimit(env, `login:${clientIp}`, 10, 60);
+      if (!allowed) return jsonResponse({ error: 'Demasiados intentos de inicio de sesión. Por favor espera un minuto.' }, 429, origin);
+
       let body;
       try { body = await request.json(); } catch { return jsonResponse({ error: 'JSON inválido' }, 400, origin); }
 
@@ -322,20 +358,20 @@ export default {
       if (!identifier) return jsonResponse({ error: 'Ingresa tu usuario o correo.' }, 400, origin);
 
       const userId = await findUserIdByIdentifier(env, identifier);
-      if (!userId) return jsonResponse({ error: 'Usuario no encontrado.' }, 404, origin);
+      if (!userId) return jsonResponse({ error: 'Usuario o contraseña incorrectos.' }, 401, origin);
 
       const user = await getUserById(env, userId);
-      if (!user) return jsonResponse({ error: 'Datos de usuario corrompidos.' }, 500, origin);
+      if (!user) return jsonResponse({ error: 'Usuario o contraseña incorrectos.' }, 401, origin);
 
       // Verify password
       if (user.passwordHash && user.salt) {
         const attemptHash = await hashPassword(password, user.salt);
         if (attemptHash !== user.passwordHash) {
-          return jsonResponse({ error: 'Contraseña o PIN incorrecto.' }, 401, origin);
+          return jsonResponse({ error: 'Usuario o contraseña incorrectos.' }, 401, origin);
         }
       } else if (user.passwordHash && !user.salt) {
         // Fallback migratorio: contraseñas heredadas (plain text viejo)
-        if (user.passwordHash !== password) return jsonResponse({ error: 'Contraseña o PIN incorrecto.' }, 401, origin);
+        if (user.passwordHash !== password) return jsonResponse({ error: 'Usuario o contraseña incorrectos.' }, 401, origin);
         // Actualizamos automáticamente la seguridad al nuevo esquema de hashes
         user.salt = crypto.randomUUID();
         user.passwordHash = await hashPassword(password, user.salt);
@@ -392,7 +428,10 @@ export default {
 
         if (body.username && body.username.trim()) user.username = body.username.trim().slice(0, 24);
         if (body.bio !== undefined) user.bio = String(body.bio).slice(0, 200);
-        if (body.avatar !== undefined) user.avatar = String(body.avatar);
+        if (body.avatar !== undefined) {
+          if (!isSafeAvatarUrl(body.avatar)) return jsonResponse({ error: 'Foto o avatar no permitido.' }, 400, origin);
+          user.avatar = String(body.avatar);
+        }
 
         // Actualizamos punteros si el username/email cambió
         await updateProfilePointers(env, oldUser, user);

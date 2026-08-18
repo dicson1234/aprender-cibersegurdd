@@ -91,8 +91,10 @@ class GlobalSearchEngine {
       }
     });
 
+    const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
     if (results.length === 0) {
-      resultsContainer.innerHTML = `<div style="color: var(--text-muted); padding: 20px; text-align: center;">No se encontraron resultados para "${query}".</div>`;
+      resultsContainer.innerHTML = `<div style="color: var(--text-muted); padding: 20px; text-align: center;">No se encontraron resultados para "${esc(query)}".</div>`;
       return;
     }
 
@@ -100,12 +102,12 @@ class GlobalSearchEngine {
     results.slice(0, 15).forEach(res => {
       html += `
         <div style="background: var(--bg-surface); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 10px; cursor: pointer;"
-             onclick="window.location.hash='${res.hash}'; document.getElementById('search-modal').classList.remove('active');">
+             onclick="window.location.hash='${esc(res.hash)}'; document.getElementById('search-modal').classList.remove('active');">
           <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span style="font-weight: 700; color: var(--accent-cyan); font-size: 0.95rem;">${res.title}</span>
-            <span class="tag purple" style="font-size: 0.7rem;">${res.type}</span>
+            <span style="font-weight: 700; color: var(--accent-cyan); font-size: 0.95rem;">${esc(res.title)}</span>
+            <span class="tag purple" style="font-size: 0.7rem;">${esc(res.type)}</span>
           </div>
-          <div style="font-size: 0.85rem; color: var(--text-muted);">${res.snippet}</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">${esc(res.snippet)}</div>
         </div>
       `;
     });
