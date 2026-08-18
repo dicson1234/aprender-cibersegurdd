@@ -8,6 +8,17 @@ const CLOUD_TOKEN_KEY = 'cyberlab_cloud_token_v1';
 
 const AVATAR_PRESETS = ['🤖', '🛡️', '💻', '⚡', '🦅', '🥷', '🦊', '🚀'];
 
+const accountDefaults = {
+  id: '',
+  username: 'Estudiante',
+  email: '',
+  avatar: '🛡️',
+  bio: 'Estudiante de CyberLab',
+  createdAt: new Date().toISOString(),
+  isCloud: false,
+  privateProfile: false
+};
+
 class AccountsManager {
   constructor() {
     this.accounts = this.loadAccounts();
@@ -31,16 +42,25 @@ class AccountsManager {
       const parsed = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]');
       if (!Array.isArray(parsed)) return [];
       return parsed.map(a => ({ ...accountDefaults, ...a, privateProfile: a.privateProfile !== false }));
-    } catch { return []; }
+    } catch (e) {
+      console.error('Error al cargar cuentas:', e);
+      return [];
+    }
   }
 
   saveAccounts() { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(this.accounts)); }
 
   ensureMigration() {
-    if (this.accounts.length || !localStorage.getItem('cyberlab_user_data_v1')) return;
+    if (this.accounts.length > 0) {
+      if (!this.activeId && this.accounts[0]) {
+        this.activeId = this.accounts[0].id;
+        localStorage.setItem(ACTIVE_ACCOUNT_KEY, this.activeId);
+      }
+      return;
+    }
     const account = {
       id: `user-${crypto.randomUUID()}`,
-      username: 'Usuario',
+      username: 'Estudiante',
       pinHash: '',
       avatar: '🛡️',
       bio: 'Estudiante de CyberLab',
@@ -65,6 +85,7 @@ class AccountsManager {
   }
 
   renderGate() {
+    if (this.getActive()) return;
     if (document.getElementById('accounts-gate')) return;
     const gate = document.createElement('div');
     gate.id = 'accounts-gate';
