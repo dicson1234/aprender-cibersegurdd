@@ -790,10 +790,16 @@
 
 /* Thought Bubble Manual Close Button */
 .robot-thought-bubble {
-  display: flex !important;
+  display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
+}
+.robot-thought-bubble.hidden {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
 }
 .robot-thought-bubble .thought-content {
   flex: 1;

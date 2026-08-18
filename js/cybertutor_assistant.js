@@ -41,16 +41,17 @@ class CyberTutorAssistant {
     const thoughtBubble = document.createElement('div');
     thoughtBubble.id = 'robot-thought-bubble';
     thoughtBubble.className = 'robot-thought-bubble hidden';
+    thoughtBubble.style.display = 'none';
     thoughtBubble.setAttribute('role', 'status');
     thoughtBubble.setAttribute('aria-live', 'polite');
     thoughtBubble.onclick = (e) => {
-      if (e.target.closest('.thought-close-btn')) return;
+      if (e.target.closest('#thought-close-x-btn')) return;
       if (this.activeThoughtPrompt) {
         this.sendQuickPrompt(this.activeThoughtPrompt);
       } else {
         this.toggleDrawer(true);
       }
-      this.hideThoughtBubble();
+      this.hideThoughtBubble(true);
     };
     document.body.appendChild(thoughtBubble);
 
@@ -163,9 +164,9 @@ class CyberTutorAssistant {
       }
     }, 5000);
 
-    // 2. Unsolicited Spontaneous Thought & Insight Loop (85s interval, highly discrete)
-    setTimeout(() => this.triggerSpontaneousThought(), 12000);
-    setInterval(() => this.triggerSpontaneousThought(), 85000);
+    // 2. Unsolicited Spontaneous Thought & Insight Loop (90s interval)
+    setTimeout(() => this.triggerSpontaneousThought(), 15000);
+    setInterval(() => this.triggerSpontaneousThought(), 90000);
 
     // 3. React to view navigation
     window.addEventListener('hashchange', () => {
@@ -237,33 +238,52 @@ class CyberTutorAssistant {
     this.activeThoughtPrompt = promptText;
     bubble.innerHTML = `
       <div class="thought-content"><span>${textHTML}</span></div>
-      <button class="thought-close-btn" aria-label="Cerrar aviso" onclick="event.stopPropagation(); window.CyberTutorAssistant.hideThoughtBubble(true);">✕</button>
+      <button class="thought-close-btn" id="thought-close-x-btn" aria-label="Cerrar aviso">✕</button>
     `;
+
+    bubble.style.display = 'flex';
     bubble.classList.remove('hidden');
+
+    const closeBtn = bubble.querySelector('#thought-close-x-btn');
+    if (closeBtn) {
+      const doClose = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        this.hideThoughtBubble(true);
+      };
+      closeBtn.onclick = doClose;
+      closeBtn.ontouchstart = doClose;
+    }
 
     if (fab) fab.classList.add('emotion-happy');
 
+    // Auto-close after EXACTLY 3 seconds as requested
     clearTimeout(this.thoughtTimer);
     this.thoughtTimer = setTimeout(() => {
       this.hideThoughtBubble();
-    }, 7500);
+    }, 3000);
   }
 
   hideThoughtBubble(userInitiated = false) {
     const bubble = document.getElementById('robot-thought-bubble');
     const fab = document.getElementById('cybertutor-fab');
-    if (bubble) bubble.classList.add('hidden');
+    if (bubble) {
+      bubble.classList.add('hidden');
+      bubble.style.display = 'none';
+    }
     if (fab) fab.classList.remove('emotion-happy');
     if (userInitiated) {
       this.userDismissedThoughts = true;
-      setTimeout(() => { this.userDismissedThoughts = false; }, 180000); // 3 min silence
+      setTimeout(() => { this.userDismissedThoughts = false; }, 300000); // 5 min silence on manual dismiss
     }
   }
 
   toggleDrawer(force) {
     const drawer = document.getElementById('cybertutor-drawer');
     if (!drawer) return;
-    this.hideThoughtBubble();
+    this.hideThoughtBubble(true);
     this.isOpen = typeof force === 'boolean' ? force : !this.isOpen;
     drawer.classList.toggle('open', this.isOpen);
     drawer.setAttribute('aria-hidden', String(!this.isOpen));
