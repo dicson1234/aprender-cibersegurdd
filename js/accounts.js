@@ -68,8 +68,8 @@ class AccountsManager {
     if (document.getElementById('accounts-gate')) return;
     const gate = document.createElement('div');
     gate.id = 'accounts-gate';
-    gate.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(5,8,15,.97);backdrop-filter:blur(12px);font-family:inherit;';
-    gate.innerHTML = `<div id="accounts-card" style="width:min(580px,100%);max-height:92vh;overflow:auto;background:var(--bg-card,#111827);border:1px solid var(--border-color,#263244);border-radius:20px;padding:24px;box-shadow:0 25px 80px rgba(0,0,0,.5)"></div>`;
+    gate.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(5,8,15,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);font-family:inherit;';
+    gate.innerHTML = `<div id="accounts-card" style="width:min(480px,96vw);max-height:88vh;overflow-y:auto;background:var(--bg-card,#0f141d);border:1px solid var(--accent-cyan);border-radius:24px;padding:20px 16px;box-shadow:0 20px 60px rgba(0,240,255,0.2)"></div>`;
     document.body.appendChild(gate);
     this.renderSelection();
   }
@@ -84,24 +84,36 @@ class AccountsManager {
     }
 
     card.innerHTML = `
-      <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:3.2rem;margin-bottom:4px">🛡️</div>
-        <h1 style="margin:4px 0">Bienvenido a CyberLab</h1>
-        <p style="color:var(--text-muted);font-size:.9rem">Inicia sesión en tu cuenta en la nube o elige un perfil en este dispositivo.</p>
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:2.2rem;line-height:1;margin-bottom:4px">🛡️</div>
+        <h2 style="margin:2px 0 4px;font-size:1.25rem;font-weight:800;color:var(--text-main);letter-spacing:-0.01em">Bienvenido a CyberLab</h2>
+        <p style="color:var(--text-muted);font-size:.78rem;margin:0">Inicia sesión en la nube o selecciona un perfil local.</p>
       </div>
 
-      <div style="display:flex;gap:8px;margin-bottom:18px;background:rgba(0,0,0,0.3);padding:4px;border-radius:12px;border:1px solid var(--border-color)">
-        <button id="tab-cloud-login" class="btn btn-primary" style="flex:1;font-size:.85rem;padding:8px">🌐 Iniciar Sesión</button>
-        <button id="tab-cloud-register" class="btn btn-secondary" style="flex:1;font-size:.85rem;padding:8px">✨ Crear Cuenta</button>
-        <button id="tab-local-profiles" class="btn btn-secondary" style="flex:1;font-size:.85rem;padding:8px">👤 Perfiles Locales</button>
+      <div style="display:flex;gap:4px;margin-bottom:14px;background:rgba(0,0,0,0.4);padding:4px;border-radius:14px;border:1px solid var(--border-color)">
+        <button id="tab-cloud-login" class="btn btn-primary" style="flex:1;font-size:.78rem;padding:8px 4px;border-radius:10px">🌐 Iniciar</button>
+        <button id="tab-cloud-register" class="btn btn-secondary" style="flex:1;font-size:.78rem;padding:8px 4px;border-radius:10px">✨ Crear</button>
+        <button id="tab-local-profiles" class="btn btn-secondary" style="flex:1;font-size:.78rem;padding:8px 4px;border-radius:10px">👤 Locales</button>
       </div>
 
       <div id="auth-tab-content"></div>
     `;
 
-    card.querySelector('#tab-cloud-login').onclick = () => this.renderCloudLogin();
-    card.querySelector('#tab-cloud-register').onclick = () => this.renderCloudRegister();
-    card.querySelector('#tab-local-profiles').onclick = () => this.renderLocalProfiles();
+    const btnLogin = card.querySelector('#tab-cloud-login');
+    const btnReg = card.querySelector('#tab-cloud-register');
+    const btnLocal = card.querySelector('#tab-local-profiles');
+
+    const setActiveTab = (btn) => {
+      [btnLogin, btnReg, btnLocal].forEach(b => {
+        b.className = 'btn btn-secondary';
+        b.style.background = 'transparent';
+      });
+      btn.className = 'btn btn-primary';
+    };
+
+    btnLogin.onclick = () => { setActiveTab(btnLogin); this.renderCloudLogin(); };
+    btnReg.onclick = () => { setActiveTab(btnReg); this.renderCloudRegister(); };
+    btnLocal.onclick = () => { setActiveTab(btnLocal); this.renderLocalProfiles(); };
 
     this.renderCloudLogin();
   }
@@ -110,18 +122,18 @@ class AccountsManager {
     const container = document.getElementById('auth-tab-content');
     if (!container) return;
     container.innerHTML = `
-      <div style="background:rgba(0,240,255,0.04);border:1px solid rgba(0,240,255,0.2);padding:14px;border-radius:12px;margin-bottom:16px">
-        <h3 style="margin:0 0 4px;font-size:1rem;color:var(--accent-cyan)">🌐 Iniciar Sesión en la Nube (Backend Worker)</h3>
-        <p style="margin:0;font-size:.8rem;color:var(--text-muted)">Accede a tu perfil, foto de usuario y progreso guardados en la nube desde cualquier dispositivo.</p>
+      <div style="background:rgba(0,240,255,0.05);border:1px solid rgba(0,240,255,0.2);padding:10px 12px;border-radius:12px;margin-bottom:14px">
+        <strong style="display:block;font-size:.85rem;color:var(--accent-cyan);margin-bottom:2px">🌐 Cuenta en la Nube (Worker Backend)</strong>
+        <p style="margin:0;font-size:.75rem;color:var(--text-muted)">Accede a tus datos y foto guardados desde cualquier dispositivo.</p>
       </div>
-      <label style="display:block;margin-bottom:4px;font-weight:600;font-size:.85rem">Usuario o Correo</label>
-      <input id="login-identifier" class="chat-input" placeholder="Ej. Dicson o usuario@cyberlab.com" style="width:100%;margin-bottom:12px">
+      <label style="display:block;margin-bottom:4px;font-weight:700;font-size:.8rem">Usuario o Correo</label>
+      <input id="login-identifier" class="chat-input" placeholder="Ej. Dicson o usuario@cyberlab.com" style="width:100%;height:42px;margin-bottom:10px;border-radius:12px;font-size:.88rem">
       
-      <label style="display:block;margin-bottom:4px;font-weight:600;font-size:.85rem">Contraseña o PIN</label>
-      <input id="login-password" type="password" class="chat-input" placeholder="••••••••" style="width:100%;margin-bottom:16px">
+      <label style="display:block;margin-bottom:4px;font-weight:700;font-size:.8rem">Contraseña o PIN</label>
+      <input id="login-password" type="password" class="chat-input" placeholder="••••••••" style="width:100%;height:42px;margin-bottom:14px;border-radius:12px;font-size:.88rem">
 
-      <button id="btn-cloud-login-submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;font-weight:700">🚀 Iniciar Sesión en Nube</button>
-      <div id="login-status-msg" style="margin-top:10px;font-size:.85rem;text-align:center"></div>
+      <button id="btn-cloud-login-submit" class="btn btn-primary" style="width:100%;justify-content:center;min-height:44px;border-radius:12px;font-weight:700">🚀 Iniciar Sesión</button>
+      <div id="login-status-msg" style="margin-top:8px;font-size:.8rem;text-align:center"></div>
     `;
 
     container.querySelector('#btn-cloud-login-submit').onclick = () => this.handleCloudLogin();
@@ -132,36 +144,36 @@ class AccountsManager {
     if (!container) return;
     this.pendingAvatar = '🛡️';
     container.innerHTML = `
-      <div style="background:rgba(0,240,255,0.04);border:1px solid rgba(0,240,255,0.2);padding:14px;border-radius:12px;margin-bottom:16px">
-        <h3 style="margin:0 0 4px;font-size:1rem;color:var(--accent-cyan)">✨ Crear Nueva Cuenta Nube</h3>
-        <p style="margin:0;font-size:.8rem;color:var(--text-muted)">Personaliza tu usuario, sube tu foto de perfil y sincroniza tu progreso en vivo.</p>
+      <div style="background:rgba(0,240,255,0.05);border:1px solid rgba(0,240,255,0.2);padding:10px 12px;border-radius:12px;margin-bottom:12px">
+        <strong style="display:block;font-size:.85rem;color:var(--accent-cyan);margin-bottom:2px">✨ Crear Cuenta e Ingresar</strong>
+        <p style="margin:0;font-size:.75rem;color:var(--text-muted)">Personaliza tu foto de perfil y usuario.</p>
       </div>
 
-      <label style="display:block;margin-bottom:4px;font-weight:600;font-size:.85rem">Nombre de Usuario</label>
-      <input id="reg-username" class="chat-input" maxlength="24" placeholder="Ej. Dicson" style="width:100%;margin-bottom:12px">
+      <label style="display:block;margin-bottom:2px;font-weight:700;font-size:.8rem">Nombre de Usuario</label>
+      <input id="reg-username" class="chat-input" maxlength="24" placeholder="Ej. Dicson" style="width:100%;height:40px;margin-bottom:8px;border-radius:12px;font-size:.85rem">
 
-      <label style="display:block;margin-bottom:4px;font-weight:600;font-size:.85rem">Correo Electrónico (opcional)</label>
-      <input id="reg-email" type="email" class="chat-input" placeholder="dicson@ejemplo.com" style="width:100%;margin-bottom:12px">
+      <label style="display:block;margin-bottom:2px;font-weight:700;font-size:.8rem">Correo (opcional)</label>
+      <input id="reg-email" type="email" class="chat-input" placeholder="dicson@ejemplo.com" style="width:100%;height:40px;margin-bottom:8px;border-radius:12px;font-size:.85rem">
 
-      <label style="display:block;margin-bottom:4px;font-weight:600;font-size:.85rem">Contraseña o PIN (mínimo 4 caracteres)</label>
-      <input id="reg-password" type="password" maxlength="20" class="chat-input" placeholder="••••••••" style="width:100%;margin-bottom:14px">
+      <label style="display:block;margin-bottom:2px;font-weight:700;font-size:.8rem">Contraseña o PIN (mín. 4 carácteres)</label>
+      <input id="reg-password" type="password" maxlength="20" class="chat-input" placeholder="••••••••" style="width:100%;height:40px;margin-bottom:10px;border-radius:12px;font-size:.85rem">
 
-      <label style="display:block;margin-bottom:6px;font-weight:600;font-size:.85rem">Foto de Perfil o Avatar</label>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <div id="avatar-preview-box" style="width:58px;height:58px;border-radius:50%;background:var(--bg-surface);border:2px solid var(--accent-cyan);display:grid;place-items:center;font-size:2rem;overflow:hidden">
+      <label style="display:block;margin-bottom:4px;font-weight:700;font-size:.8rem">Foto de Perfil / Avatar</label>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div id="avatar-preview-box" style="width:46px;height:46px;min-width:46px;border-radius:50%;background:var(--bg-surface);border:2px solid var(--accent-cyan);display:grid;place-items:center;font-size:1.6rem;overflow:hidden">
           🛡️
         </div>
-        <div style="flex:1">
+        <div style="flex:1;min-width:0">
           <input id="reg-avatar-file" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
-          <button type="button" class="btn btn-secondary" style="font-size:.8rem;padding:6px 12px;margin-bottom:6px" onclick="document.getElementById('reg-avatar-file').click()">📸 Subir foto propia</button>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            ${AVATAR_PRESETS.map(emoji => `<button type="button" class="btn-avatar-preset" style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:8px;font-size:1.2rem;padding:4px 8px;cursor:pointer">${emoji}</button>`).join('')}
+          <button type="button" class="btn btn-secondary" style="font-size:.75rem;padding:4px 10px;min-height:30px;margin-bottom:4px" onclick="document.getElementById('reg-avatar-file').click()">📸 Subir foto</button>
+          <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:2px">
+            ${AVATAR_PRESETS.map(emoji => `<button type="button" class="btn-avatar-preset" style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:8px;font-size:1rem;padding:2px 6px;cursor:pointer;flex:0 0 auto">${emoji}</button>`).join('')}
           </div>
         </div>
       </div>
 
-      <button id="btn-cloud-reg-submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;font-weight:700">✨ Crear Cuenta e Ingresar</button>
-      <div id="reg-status-msg" style="margin-top:10px;font-size:.85rem;text-align:center"></div>
+      <button id="btn-cloud-reg-submit" class="btn btn-primary" style="width:100%;justify-content:center;min-height:44px;border-radius:12px;font-weight:700">✨ Crear e Ingresar</button>
+      <div id="reg-status-msg" style="margin-top:6px;font-size:.8rem;text-align:center"></div>
     `;
 
     container.querySelector('#reg-avatar-file').onchange = e => this.previewFile(e.target.files[0]);

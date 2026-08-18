@@ -501,6 +501,10 @@ class CyberLabApp {
   }
 
   renderProfile() {
+    if (window.CyberProfileAccounts && typeof window.CyberProfileAccounts.render === 'function') {
+      window.CyberProfileAccounts.render();
+      return;
+    }
     const container = document.getElementById('profile-root');
     if (!container) return;
     const data = window.CyberStorage.data;

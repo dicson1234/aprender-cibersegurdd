@@ -161,8 +161,12 @@
     };
   }
 
-  if(window.CyberApp)window.CyberApp.renderProfile=render;
-  window.addEventListener('cyberlab_account_changed',()=>setTimeout(render,0));
-  window.addEventListener('cyberlab_state_updated',()=>setTimeout(render,0));
-  setTimeout(render,0);
+  window.CyberProfileAccounts = { render };
+  if (window.CyberApp) window.CyberApp.renderProfile = render;
+  window.addEventListener('cyberlab_account_changed', () => {
+    if (window.CyberApp?.updateHeaderStats) window.CyberApp.updateHeaderStats();
+    setTimeout(render, 0);
+  });
+  window.addEventListener('cyberlab_state_updated', () => setTimeout(render, 0));
+  setTimeout(render, 0);
 })();
