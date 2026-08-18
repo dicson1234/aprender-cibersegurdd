@@ -1143,15 +1143,17 @@
     box-sizing: border-box !important;
   }
 
+  /* Use 100dvh minus only header(64) + bottom-nav(80) + small padding(16) = 160px */
   .chatgpt-web-layout {
     display: flex !important;
     flex-direction: column !important;
-    height: calc(100dvh - 175px) !important;
-    min-height: 380px !important;
-    max-height: calc(100dvh - 175px) !important;
-    border-radius: 14px !important;
+    height: calc(100dvh - 160px) !important;
+    min-height: 300px !important;
+    max-height: calc(100dvh - 140px) !important;
+    border-radius: 12px !important;
     overflow: hidden !important;
-    touch-action: pan-y !important;
+    border-width: 1px !important;
+    margin: 0 !important;
   }
 
   .chatgpt-sidebar {
@@ -1161,6 +1163,7 @@
   .chatgpt-chat-area {
     display: flex !important;
     flex-direction: column !important;
+    flex: 1 !important;
     height: 100% !important;
     width: 100% !important;
     min-height: 0 !important;
@@ -1169,12 +1172,14 @@
 
   .chatgpt-chat-header {
     flex: 0 0 auto !important;
+    padding: 0 10px !important;
+    height: 42px !important;
+    min-height: 42px !important;
   }
 
   .chatgpt-messages-container {
-    flex: 1 1 auto !important;
+    flex: 1 !important;
     min-height: 0 !important;
-    height: 0 !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
@@ -1192,11 +1197,38 @@
     max-width: 100% !important;
     word-break: break-word !important;
     overflow-wrap: anywhere !important;
+    font-size: 0.84rem !important;
+  }
+
+  .msg-content pre {
+    white-space: pre-wrap !important;
+    word-break: break-all !important;
+    max-width: 100% !important;
   }
 
   .chatgpt-input-container {
     flex: 0 0 auto !important;
-    padding: 8px 10px calc(8px + env(safe-area-inset-bottom)) !important;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .chatgpt-quick-chips {
+    margin-bottom: 4px !important;
+  }
+
+  .chatgpt-input-wrapper {
+    padding: 3px 5px 3px 8px !important;
+  }
+
+  .chatgpt-input {
+    height: 34px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .chatgpt-btn-mic,
+  .chatgpt-btn-send {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 0.82rem !important;
   }
 
   .cybertutor-mobile-btn {

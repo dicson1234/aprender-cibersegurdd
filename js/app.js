@@ -166,25 +166,24 @@ class CyberLabApp {
     const container = document.getElementById('glossary-root');
     if (!container) return;
     const account = window.CyberAccounts?.getActive();
-    let officialGlossary = window.CyberData?.glossary || [];
     const aiGlossary = window.CyberStorage?.data?.aiGlossary || [];
 
-    // Fallback: If dataset was not yet loaded into memory, fetch immediately
-    if (officialGlossary.length === 0 && !this._fetchingGlossary) {
-      this._fetchingGlossary = true;
-      fetch('./data/glossary.json')
-        .then(r => r.json())
-        .then(data => {
-          window.CyberData = window.CyberData || {};
-          window.CyberData.glossary = data || [];
-          this._fetchingGlossary = false;
-          this.renderGlossary(filterMode, searchQuery);
-        })
-        .catch(err => {
-          console.error('Error al obtener glossary.json:', err);
-          this._fetchingGlossary = false;
-        });
+    // ALWAYS force-load official glossary if not present
+    if (!window.CyberData?.glossary || window.CyberData.glossary.length === 0) {
+      container.innerHTML = '<div class="card" style="padding:24px;text-align:center;color:var(--text-muted);">⏳ Cargando glosario...</div>';
+      fetch('./data/glossary.json').then(r => r.json()).then(data => {
+        window.CyberData = window.CyberData || {};
+        window.CyberData.glossary = Array.isArray(data) ? data : [];
+        console.log('📖 Glossary loaded:', window.CyberData.glossary.length, 'terms');
+        this.renderGlossary(filterMode, searchQuery);
+      }).catch(e => {
+        console.error('Error fetching glossary:', e);
+        container.innerHTML = '<div class="card" style="padding:24px;text-align:center;color:#ff6b6b;">❌ Error al cargar el glosario. Intenta recargar la página.</div>';
+      });
+      return; // Exit here, re-render will be triggered by the fetch callback
     }
+
+    let officialGlossary = window.CyberData.glossary;
     
     let combinedGlossary = [...aiGlossary, ...officialGlossary];
 
