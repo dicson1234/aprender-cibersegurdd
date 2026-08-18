@@ -1,5 +1,5 @@
 /* CyberLab Offline-First Service Worker */
-const CACHE_NAME = 'cyberlab-v12-onboarding-ai-hardening';
+const CACHE_NAME = 'cyberlab-v13-ux-hardening';
 const ASSETS = [
   './','./index.html','./manifest.json','./icon.svg',
   './css/variables.css?v=5','./css/main.css?v=5','./css/components.css?v=5','./css/mobile.css?v=5','./css/mobile-polish.css?v=2',
@@ -8,25 +8,16 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const requestUrl = new URL(event.request.url);
-
   event.respondWith(
     fetch(event.request)
       .then(response => {
@@ -36,9 +27,6 @@ self.addEventListener('fetch', event => {
         }
         return response;
       })
-      .catch(() => caches.match(event.request).then(response => response || new Response(
-        'Offline: recurso no disponible',
-        { status: 503, headers: { 'Content-Type': 'text/plain;charset=utf-8' } }
-      )))
+      .catch(() => caches.match(event.request).then(response => response || new Response('Offline: recurso no disponible', {status:503,headers:{'Content-Type':'text/plain;charset=utf-8'}})))
   );
 });
