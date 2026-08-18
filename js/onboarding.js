@@ -5,14 +5,48 @@
 class OnboardingManager {
   constructor() {
     this.storage = window.CyberStorage;
-    this.init();
+    this.initPromise = this.init();
   }
 
-  init() {
+  async init() {
+    // Never decide whether onboarding is needed from the temporary default state.
+    // The account-scoped state must be hydrated first.
+    await this.waitForAccountState();
+
     const data = this.storage?.data || {};
-    if (!data.onboardingCompleted) {
-      setTimeout(() => this.showOnboardingModal(), 600);
+    if (data.onboardingCompleted) return;
+
+    setTimeout(() => {
+      // Re-check after the delay in case the account changed while the app booted.
+      const activeId = window.CyberAccounts?.activeId;
+      const loadedId = this.storage?.activeAccountId;
+      const latest = this.storage?.data || {};
+      if (activeId && loadedId === activeId && !latest.onboardingCompleted) {
+        this.showOnboardingModal();
+      }
+    }, 400);
+  }
+
+  async waitForAccountState() {
+    const accounts = window.CyberAccounts;
+    if (!this.storage || !accounts?.activeId) return;
+
+    // account_bootstrap now hydrates immediately, but keep this defensive path
+    // for cached/older pages or unusual script timing.
+    if (this.storage.activeAccountId !== accounts.activeId) {
+      this.storage.setActiveAccount(accounts.activeId);
     }
+
+    if (this.storage.activeAccountId === accounts.activeId) return;
+
+    await new Promise(resolve => {
+      const finish = () => {
+        window.removeEventListener('cyberlab_state_updated', finish);
+        resolve();
+      };
+      window.addEventListener('cyberlab_state_updated', finish, { once: true });
+      setTimeout(finish, 1200);
+    });
   }
 
   showOnboardingModal() {
@@ -38,7 +72,7 @@ class OnboardingManager {
               <span class="opt-icon">🌱</span>
               <div>
                 <strong>Desde Cero</strong>
-                <p>Quiero empezar con los fundamentos más básicos sin asumir conocimientos previas.</p>
+                <p>Quiero empezar con los fundamentos más básicos sin asumir conocimientos previos.</p>
               </div>
             </button>
             <button class="onboarding-option-btn" onclick="window.CyberOnboarding.selectLevel('basic')">
@@ -52,7 +86,7 @@ class OnboardingManager {
               <span class="opt-icon">⚡</span>
               <div>
                 <strong>Intermedio</strong>
-                <p>Tengo bases en redes/sistemas y busco laboratorios, comandos y hardening.</p>
+                <p>Tengo bases en redes y sistemas, y busco laboratorios, comandos y hardening.</p>
               </div>
             </button>
             <button class="onboarding-option-btn" onclick="window.CyberOnboarding.selectLevel('advanced')">
@@ -76,10 +110,14 @@ class OnboardingManager {
   }
 
   selectLevel(levelKey) {
+    const allowed = ['zero', 'basic', 'intermediate', 'advanced'];
+    if (!allowed.includes(levelKey) || !this.storage?.activeAccountId) return;
+
     const data = this.storage.data;
     data.onboardingCompleted = true;
     data.userLevelPref = levelKey;
-    this.storage.saveData();
+    const saved = this.storage.saveData();
+    if (!saved) return;
 
     const modal = document.getElementById('onboarding-modal');
     if (modal) modal.remove();
