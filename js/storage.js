@@ -14,7 +14,7 @@ function localDateKey(date=new Date()){
 const DEFAULT_STATE={
   xp:0,level:1,streak:1,lastActiveDate:localDateKey(),hoursStudied:0,masteryLevels:{},
   completedModules:[],passedQuizzes:[],completedLabs:[],completedChallenges:[],notes:[],mistakes:[],
-  resourceRatings:{},viewedResources:[],unlockedAchievements:[],quizAttempts:{},
+  resourceRatings:{},viewedResources:[],unlockedAchievements:[],quizAttempts:{},rewardedExams:[],
   goals:{dailyMinutes:30,dailyCompleted:false,weeklyModules:2,weeklyCompleted:false},
   primaryObjective:'Convertirme en profesional de ciberseguridad.',
   secondaryObjective:'Especializarme en Blue Team & SOC.',
@@ -35,7 +35,7 @@ function sanitizeState(input){
   d.lastActiveDate=typeof input.lastActiveDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(input.lastActiveDate)?input.lastActiveDate:d.lastActiveDate;
   d.hoursStudied=Math.max(0,asNumber(input.hoursStudied,0));
   d.masteryLevels=isObject(input.masteryLevels)?input.masteryLevels:{};
-  ['completedModules','passedQuizzes','completedLabs','completedChallenges','notes','mistakes','unlockedAchievements','viewedResources'].forEach(k=>d[k]=asArray(input[k]));
+  ['completedModules','passedQuizzes','completedLabs','completedChallenges','notes','mistakes','unlockedAchievements','viewedResources','rewardedExams'].forEach(k=>d[k]=asArray(input[k]));
   d.resourceRatings=isObject(input.resourceRatings)?input.resourceRatings:{};
   d.quizAttempts=isObject(input.quizAttempts)?input.quizAttempts:{};
   d.goals=isObject(input.goals)?{...d.goals,...input.goals}:d.goals;
@@ -48,14 +48,10 @@ function sanitizeState(input){
 
 class StorageManager{
   constructor(){this.activeAccountId=null;this.data=cloneDefaultState();}
-
   key(id=this.activeAccountId){return id?`${STORAGE_PREFIX}${id}`:null;}
 
   legacyKeysFor(id){
     const keys=LEGACY_PREFIXES.map(prefix=>`${prefix}${id}`);
-    // Global v1/v2 state is only a valid migration source when this browser
-    // still has a single account. Never copy one user's legacy state into a
-    // different account created later.
     if((window.CyberAccounts?.accounts||[]).length<=1)keys.push(...LEGACY_KEYS);
     return keys;
   }
@@ -94,16 +90,9 @@ class StorageManager{
 
   saveData(data=this.data,emit=true,{sync=true}={}){
     this.data=sanitizeState(data);
-    if(!this.activeAccountId){
-      console.warn('Se intentó guardar progreso sin cuenta activa.');
-      return false;
-    }
-    try{
-      localStorage.setItem(this.key(),JSON.stringify(this.data));
-    }catch(e){
-      console.error('Error al guardar:',e);
-      return false;
-    }
+    if(!this.activeAccountId){console.warn('Se intentó guardar progreso sin cuenta activa.');return false;}
+    try{localStorage.setItem(this.key(),JSON.stringify(this.data));}
+    catch(e){console.error('Error al guardar:',e);return false;}
     if(emit)window.dispatchEvent(new CustomEvent('cyberlab_state_updated',{detail:this.data}));
     if(sync)window.CyberAccounts?.syncCloudProgress?.();
     return true;
@@ -111,14 +100,12 @@ class StorageManager{
 
   importCloudProgress(cloudData){
     if(!isObject(cloudData)||!this.activeAccountId)return false;
-    const clean=sanitizeState(cloudData);
-    return this.saveData(clean,true,{sync:false});
+    return this.saveData(sanitizeState(cloudData),true,{sync:false});
   }
 
   checkStreak(){
     if(!this.activeAccountId)return;
-    const today=localDateKey();
-    const last=this.data.lastActiveDate;
+    const today=localDateKey(),last=this.data.lastActiveDate;
     if(!last||last===today)return;
     const diff=Math.round((Date.parse(today)-Date.parse(last))/86400000);
     this.data.streak=diff===1?this.data.streak+1:1;
@@ -128,30 +115,19 @@ class StorageManager{
 
   exportBackup(){
     const account=window.CyberAccounts?.getActive();
-    const payload={
-      schemaVersion:4,
-      exportedAt:new Date().toISOString(),
-      account:account?{
-        id:account.id,username:account.username,email:account.email||'',avatar:account.avatar||'🛡️',bio:account.bio||'',isCloud:Boolean(account.isCloud),privateProfile:account.privateProfile!==false
-      }:null,
-      data:this.data
-    };
+    const payload={schemaVersion:4,exportedAt:new Date().toISOString(),account:account?{id:account.id,username:account.username,email:account.email||'',avatar:account.avatar||'🛡️',bio:account.bio||'',isCloud:Boolean(account.isCloud),privateProfile:account.privateProfile!==false}:null,data:this.data};
     const filename=`cyberlab_${account?.username||'usuario'}_${localDateKey()}.json`;
     const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
   }
 
   importBackup(text){
     try{
-      const parsed=JSON.parse(text);
-      const candidate=isObject(parsed)&&isObject(parsed.data)?parsed.data:parsed;
+      const parsed=JSON.parse(text),candidate=isObject(parsed)&&isObject(parsed.data)?parsed.data:parsed;
       if(!isObject(candidate))throw new Error('Formato inválido');
       if(!this.activeAccountId)throw new Error('No hay cuenta activa');
       this.saveData(candidate,true,{sync:false});
-
-      const importedAccount=parsed&&isObject(parsed.account)?parsed.account:null;
-      const active=window.CyberAccounts?.getActive?.();
+      const importedAccount=parsed&&isObject(parsed.account)?parsed.account:null,active=window.CyberAccounts?.getActive?.();
       if(importedAccount&&active){
         const patch={};
         if(typeof importedAccount.username==='string')patch.username=importedAccount.username;
@@ -159,24 +135,14 @@ class StorageManager{
         if(typeof importedAccount.bio==='string')patch.bio=importedAccount.bio;
         if(Object.keys(patch).length)window.CyberAccounts.updateActiveProfile(patch).catch(e=>console.warn('Perfil no sincronizado durante importación:',e));
       }
-
       window.CyberAccounts?.syncCloudProgress?.();
       alert('¡Copia importada correctamente! Se restauró el progreso y, cuando está presente, el perfil.');
       window.location.reload();
       return true;
-    }catch(e){
-      console.error(e);
-      alert('La copia no es válida o está dañada.');
-      return false;
-    }
+    }catch(e){console.error(e);alert('La copia no es válida o está dañada.');return false;}
   }
 
-  resetAllData(){
-    if(confirm('¿Reiniciar todo el progreso de este usuario?')){
-      if(this.activeAccountId)localStorage.removeItem(this.key());
-      window.location.reload();
-    }
-  }
+  resetAllData(){if(confirm('¿Reiniciar todo el progreso de este usuario?')){if(this.activeAccountId)localStorage.removeItem(this.key());window.location.reload();}}
 }
 
 window.CyberStorage=new StorageManager();
