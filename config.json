@@ -1,0 +1,11 @@
+{
+  "name": "CyberLab",
+  "version": "1.0.0",
+  "agent": {
+    "enabled": true,
+    "skillsPath": ".agent/skills",
+    "activeSkills": [
+      "nexus-tools"
+    ]
+  }
+}
