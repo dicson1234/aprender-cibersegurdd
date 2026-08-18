@@ -162,48 +162,83 @@ class CyberLabApp {
     }
   }
 
-  renderGlossary() {
+  renderGlossary(filterMode = 'all', searchQuery = '') {
     const container = document.getElementById('glossary-root');
     if (!container) return;
+    const account = window.CyberAccounts?.getActive();
     const officialGlossary = window.CyberData?.glossary || [];
     const aiGlossary = window.CyberStorage?.data?.aiGlossary || [];
-    const combinedGlossary = [...aiGlossary, ...officialGlossary];
+    
+    let combinedGlossary = [...aiGlossary, ...officialGlossary];
+
+    if (filterMode === 'ai') {
+      combinedGlossary = combinedGlossary.filter(g => g.isAi || g.category === '🤖 IA CyberTutor');
+    } else if (filterMode === 'official') {
+      combinedGlossary = combinedGlossary.filter(g => !g.isAi && g.category !== '🤖 IA CyberTutor');
+    }
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      combinedGlossary = combinedGlossary.filter(g => 
+        (g.term && g.term.toLowerCase().includes(q)) || 
+        (g.simpleDef && g.simpleDef.toLowerCase().includes(q)) ||
+        (g.techDef && g.techDef.toLowerCase().includes(q))
+      );
+    }
 
     let html = `
-      <div class="card" style="margin-bottom: 14px; padding: 14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <div class="card" style="margin-bottom: 12px; padding: 14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
           <div>
-            <h2 style="font-size: 1.2rem; margin:0 0 4px;">📖 Glosario de Ciberseguridad</h2>
-            <p style="font-size:.82rem; color: var(--text-muted); margin:0;">Términos oficiales y conceptos aprendidos con CyberTutor IA.</p>
+            <h2 style="font-size: 1.15rem; font-weight:800; margin:0 0 4px; color:#fff;">📖 Glosario & Diccionario Técnico</h2>
+            <div style="font-size:.78rem; color: var(--text-muted);">
+              ${account ? `🔒 Persistido en tu cuenta <strong style="color:var(--accent-cyan)">@${account.username}</strong>` : '⚠️ Inicia sesión para sincronizar términos en la nube.'}
+            </div>
           </div>
           <div style="display:flex;gap:6px;">
-            <span class="tag cyan" style="font-size:.72rem;">📚 ${officialGlossary.length} Oficiales</span>
-            <span class="tag purple" style="font-size:.72rem;background:rgba(163,113,247,.18);color:#d0b5ff;border:1px solid rgba(163,113,247,.3);">🤖 ${aiGlossary.length} Por IA</span>
+            <span class="tag cyan" style="font-size:.7rem;">📚 ${officialGlossary.length} Oficiales</span>
+            <span class="tag purple" style="font-size:.7rem;background:rgba(163,113,247,.18);color:#d0b5ff;border:1px solid rgba(163,113,247,.3);">🤖 ${aiGlossary.length} Por IA</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="glossary-search-input" class="chat-input" placeholder="🔍 Buscar término..." value="${this.esc(searchQuery)}" style="flex:1;min-width:180px;height:38px;font-size:0.82rem;">
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-sm ${filterMode === 'all' ? 'btn-primary' : 'btn-secondary'}" onclick="window.CyberApp.renderGlossary('all', document.getElementById('glossary-search-input').value)">Todos</button>
+            <button class="btn btn-sm ${filterMode === 'ai' ? 'btn-primary' : 'btn-secondary'}" onclick="window.CyberApp.renderGlossary('ai', document.getElementById('glossary-search-input').value)">🤖 IA</button>
+            <button class="btn btn-sm ${filterMode === 'official' ? 'btn-primary' : 'btn-secondary'}" onclick="window.CyberApp.renderGlossary('official', document.getElementById('glossary-search-input').value)">📚 Oficial</button>
           </div>
         </div>
       </div>
+
       <div class="grid-cards">
     `;
 
     if (combinedGlossary.length === 0) {
-      html += `<div class="card" style="text-align:center;padding:24px;color:var(--text-muted);">No hay términos en el glosario aún. ¡Hazle preguntas a CyberTutor IA para construir el tuyo!</div>`;
+      html += `
+        <div class="card" style="text-align:center;padding:24px;color:var(--text-muted);grid-column:1/-1;">
+          ${searchQuery ? 'No se encontraron términos que coincidan con la búsqueda.' : 'No hay términos guardados por IA aún. Pídele a CyberTutor IA que guarde cualquier concepto en tu glosario.'}
+        </div>`;
     } else {
       combinedGlossary.forEach(g => {
         const isAi = g.isAi || g.category === '🤖 IA CyberTutor';
         const tagClass = isAi ? 'purple' : 'cyan';
         const tagLabel = isAi ? '🤖 IA CyberTutor' : (g.term.split(' ')[0] || 'Oficial');
+        const escapedTerm = this.esc(g.term);
 
         html += `
-          <div class="card" style="${isAi ? 'border-color: rgba(163,113,247,.35); background: rgba(18,14,30,.8);' : ''}">
-            <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div class="card" style="${isAi ? 'border-color: rgba(163,113,247,.35); background: rgba(18,14,30,.85);' : ''} padding: 12px 14px; border-radius: 14px;">
+            <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
               <span class="tag ${tagClass}">${tagLabel}</span>
-              ${isAi ? `<span style="font-size:.7rem;color:#a371f7;">Guardado por IA</span>` : ''}
+              ${isAi ? `
+              <button class="btn-icon" style="font-size:0.75rem;padding:2px 6px;color:#ff6b6b;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.2);border-radius:6px;" title="Eliminar de mi glosario" onclick="window.CyberApp.deleteGlossaryTerm('${escapedTerm}')">🗑️</button>
+              ` : ''}
             </div>
-            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 6px; color:#fff;">${g.term}</h3>
-            <p style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 6px; line-height:1.4;"><strong>Explicación:</strong> ${g.simpleDef}</p>
-            ${g.techDef && g.techDef !== g.simpleDef ? `<p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; line-height:1.35;"><strong>Técnica:</strong> ${g.techDef}</p>` : ''}
+            <h3 style="font-size: 0.98rem; font-weight: 700; margin-bottom: 6px; color:#fff;">${g.term}</h3>
+            <p style="font-size: 0.83rem; color: var(--text-main); margin-bottom: 6px; line-height:1.4;"><strong>Explicación:</strong> ${g.simpleDef}</p>
+            ${g.techDef && g.techDef !== g.simpleDef ? `<p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; line-height:1.35;"><strong>Técnica:</strong> ${g.techDef}</p>` : ''}
             ${g.example ? `
-            <div style="background: rgba(0,240,255,.06); padding: 8px 10px; border-radius: 10px; font-size: 0.78rem; color: var(--accent-yellow); border:1px solid rgba(0,240,255,.12);">
+            <div style="background: rgba(0,240,255,.06); padding: 6px 10px; border-radius: 10px; font-size: 0.76rem; color: var(--accent-yellow); border:1px solid rgba(0,240,255,.12);">
               💡 <strong>Ejemplo:</strong> ${g.example}
             </div>` : ''}
           </div>
@@ -213,6 +248,22 @@ class CyberLabApp {
 
     html += `</div>`;
     container.innerHTML = html;
+
+    const input = container.querySelector('#glossary-search-input');
+    if (input) {
+      input.oninput = () => {
+        this.renderGlossary(filterMode, input.value);
+      };
+    }
+  }
+
+  deleteGlossaryTerm(term) {
+    if (confirm(`¿Eliminar '${term}' de tu glosario personal?`)) {
+      if (window.CyberStorage?.deleteAiGlossaryTerm) {
+        window.CyberStorage.deleteAiGlossaryTerm(term);
+        this.renderGlossary();
+      }
+    }
   }
 
   renderTools() {

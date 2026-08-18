@@ -1,4 +1,4 @@
-/* CyberLab Labs Engine: Guided Interactive Laboratory Workspace with Step Checklist & Verification */
+/* CyberLab Labs Engine: Guided Interactive Laboratory Workspace with Compact Cards & Step Drawer */
 
 class LabsEngine {
   constructor() {
@@ -13,152 +13,188 @@ class LabsEngine {
 
     container.innerHTML = '';
 
-    labs.forEach(lab => {
-      const isDone = this.storage.data.completedLabs.includes(lab.id);
-      const card = document.createElement('div');
-      card.className = 'card lab-card card-glass';
-      card.style.marginBottom = '24px';
+    const summaryCard = document.createElement('div');
+    summaryCard.className = 'card';
+    summaryCard.style.cssText = 'margin-bottom: 14px; padding: 14px; background: linear-gradient(135deg, rgba(0,240,255,0.08), rgba(15,20,29,0.95)); border: 1px solid rgba(0,240,255,0.25); border-radius: 16px;';
+    
+    const completedLabsCount = (this.storage.data.completedLabs || []).length;
+    const totalLabsCount = labs.length || 1;
+    const progressPct = Math.round((completedLabsCount / totalLabsCount) * 100);
 
+    summaryCard.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
+        <h2 style="font-size: 1.15rem; font-weight:800; color:#ffffff; margin:0;">🧪 CyberLabs Practicos</h2>
+        <span class="tag green" style="font-size:0.75rem;">${progressPct}% Completados</span>
+      </div>
+      <div style="width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; margin-bottom:6px;">
+        <div style="width:${progressPct}%; height:100%; background:linear-gradient(90deg, #39d353, #00f0ff); border-radius:10px; transition:width 0.4s ease;"></div>
+      </div>
+      <div style="font-size:0.76rem; color:var(--text-muted); text-align:right;">${completedLabsCount} de ${totalLabsCount} laboratorios aprobados</div>
+    `;
+    container.appendChild(summaryCard);
+
+    const grid = document.createElement('div');
+    grid.className = 'grid-cards';
+
+    labs.forEach(lab => {
+      const isDone = this.storage.data.completedLabs && this.storage.data.completedLabs.includes(lab.id);
+      
       if (!this.completedSteps[lab.id]) {
-        this.completedSteps[lab.id] = new Set(isDone ? lab.steps.map(s => s.step) : []);
+        this.completedSteps[lab.id] = new Set(isDone ? (lab.steps || []).map(s => s.step) : []);
       }
 
       const completedCount = this.completedSteps[lab.id].size;
-      const totalSteps = lab.steps.length;
-      const progressPct = totalSteps > 0 ? Math.round((completedCount / totalSteps) * 100) : 0;
+      const totalSteps = (lab.steps || []).length;
+      const labPct = totalSteps > 0 ? Math.round((completedCount / totalSteps) * 100) : 0;
 
-      let stepsHtml = '';
-      lab.steps.forEach(st => {
-        const stepDone = this.completedSteps[lab.id].has(st.step);
-        stepsHtml += `
-          <div class="lab-step-item ${stepDone ? 'step-completed' : ''}" style="margin-bottom: 16px; background: var(--bg-surface); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <label style="font-weight: 700; color: var(--accent-cyan); display:flex; align-items:center; gap:8px; cursor:pointer;">
-                <input type="checkbox" ${stepDone ? 'checked' : ''} 
-                       onchange="window.CyberLabs.toggleStep('${lab.id}', ${st.step}, this.checked)">
-                Paso ${st.step}: ${st.title}
-              </label>
-              <span class="tag ${stepDone ? 'green' : 'yellow'}">${stepDone ? '☑ Listo' : '☐ Pendiente'}</span>
-            </div>
-            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">${st.description}</div>
-            <div class="terminal-window" style="margin: 0;">
-              <div class="terminal-header">
-                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
-                <span style="font-size: 0.75rem; color: var(--text-muted);">bash — 80x24</span>
-              </div>
-              <div class="terminal-body" style="min-height: 48px; padding: 10px; display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                  <span class="terminal-prompt">user@cyberlab:~$</span> <code style="color:#00f0ff;font-family:monospace">${st.command}</code>
-                </div>
-                <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${st.command.replace(/'/g, "\\'")}'); window.CyberGamification.showToast('📋 Comando copiado al portapapeles');">Copiar</button>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-
-      let questionsHtml = '';
-      if (lab.questions && lab.questions.length > 0) {
-        lab.questions.forEach((q, idx) => {
-          questionsHtml += `
-            <div style="margin-top: 14px; background: rgba(0,0,0,0.3); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
-              <div style="font-weight: 600; margin-bottom: 8px; font-size: 0.92rem; color:var(--text-main);">Pregunta ${idx + 1}: ${q.question}</div>
-              <div style="display: flex; flex-direction: column; gap: 8px;">
-                ${q.options.map((opt, oIdx) => `
-                  <button class="quiz-option-btn" style="padding: 10px 14px; font-size: 0.88rem; text-align:left;"
-                          onclick="window.CyberLabs.answerQuestion('${lab.id}', '${q.id}', ${oIdx}, ${q.answer}, this)">
-                    ${String.fromCharCode(65 + oIdx)}. ${opt}
-                  </button>
-                `).join('')}
-              </div>
-            </div>
-          `;
-        });
-      }
+      const card = document.createElement('div');
+      card.className = 'card lab-compact-card';
+      card.style.cssText = `padding: 12px 14px; border-radius: 16px; ${isDone ? 'border:1px solid rgba(57,211,83,0.35); background:rgba(12,28,20,0.85);' : 'border:1px solid rgba(0,240,255,0.2); background:rgba(15,22,32,0.85);'}`;
 
       card.innerHTML = `
-        <div class="card-header">
-          <div>
-            <span class="tag cyan">${lab.number}</span>
-            <span class="tag purple">${lab.category}</span>
-            <h3 style="font-size: 1.3rem; font-weight: 700; margin-top: 6px; color:var(--text-main);">${lab.title}</h3>
-          </div>
-          <span class="tag ${isDone ? 'green' : 'yellow'}">${isDone ? '✓ Completado (+150 XP)' : 'En Progreso'}</span>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
+          <span class="tag ${isDone ? 'green' : 'cyan'}" style="font-size:0.7rem;">${lab.level || 'Intermedio'}</span>
+          <span style="font-size:0.75rem; color:var(--text-muted);">⚡ +${lab.xp || 50} XP</span>
         </div>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">${lab.objective}</p>
+        <h3 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 6px;">${lab.title}</h3>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.35;">${lab.description}</p>
         
-        <div style="margin-bottom: 16px; background: rgba(255,199,0,0.08); border-left:4px solid var(--accent-yellow); padding:12px; border-radius:var(--radius-sm)">
-          <strong style="color: var(--accent-yellow);">📋 Preparación del Entorno:</strong>
-          <div style="font-size: 0.9rem; color: var(--text-main); margin-top: 4px;">${lab.preparation}</div>
+        <div style="width:100%; height:4px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; margin-bottom:10px;">
+          <div style="width:${labPct}%; height:100%; background:${isDone ? '#39d353' : '#00f0ff'};"></div>
         </div>
 
-        <div style="margin-bottom: 20px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
-            <h4 style="font-size: 1.05rem; color:var(--accent-cyan);">Pasos Guiados de Ejecución (${completedCount}/${totalSteps}):</h4>
-            <span style="font-weight:700; color:var(--accent-cyan)">${progressPct}%</span>
-          </div>
-          <div class="progress-bar-container" style="height:8px;">
-            <div class="progress-bar-fill green" style="width: ${progressPct}%;"></div>
-          </div>
-        </div>
-
-        ${stepsHtml}
-
-        <div style="margin-top:24px; padding-top:16px; border-top:1px dashed var(--border-color);">
-          <h4 style="font-size: 1.05rem; margin-bottom: 12px; color:var(--accent-purple);">📝 Mini Evaluación del Laboratorio:</h4>
-          ${questionsHtml}
-        </div>
-
-        <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items:center;">
-          <button class="btn btn-secondary" onclick="window.CyberTutorAssistant.sendQuickPrompt('Ayúdame a resolver el laboratorio ${lab.title}')">🤖 Pedir Ayuda a CyberTutor</button>
-          <button class="btn btn-primary" onclick="window.CyberLabs.completeLab('${lab.id}')" ${isDone ? 'disabled' : ''}>
-            ${isDone ? '✓ Laboratorio Completado' : 'Finalizar y Marcar Completado (+150 XP)'}
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+          <span style="font-size:0.74rem; color:${isDone ? '#39d353' : 'var(--accent-cyan)'}; font-weight:600;">
+            ${isDone ? '🟢 Completado' : `${completedCount}/${totalSteps} Pasos`}
+          </span>
+          <button class="btn ${isDone ? 'btn-secondary' : 'btn-primary'} btn-sm" style="font-size:0.78rem; padding:6px 12px;" onclick="window.CyberLabs.openLabModal('${lab.id}')">
+            ${isDone ? 'Revisar Lab' : '🧪 Iniciar Lab'}
           </button>
         </div>
       `;
-
-      container.appendChild(card);
+      grid.appendChild(card);
     });
+
+    container.appendChild(grid);
+  }
+
+  openLabModal(labId) {
+    const labs = window.CyberData ? window.CyberData.labs || [] : [];
+    const lab = labs.find(l => l.id === labId);
+    if (!lab) return;
+
+    let modal = document.getElementById('lab-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'lab-modal';
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `<div class="modal-card" style="max-width:650px;"><button class="modal-close" onclick="document.getElementById('lab-modal').classList.remove('active')">✕</button><div id="lab-modal-content"></div></div>`;
+      document.body.appendChild(modal);
+    }
+
+    const modalContent = modal.querySelector('#lab-modal-content');
+    const isDone = this.storage.data.completedLabs && this.storage.data.completedLabs.includes(lab.id);
+
+    let stepsHtml = '';
+    (lab.steps || []).forEach(st => {
+      const stepDone = this.completedSteps[lab.id] && this.completedSteps[lab.id].has(st.step);
+      stepsHtml += `
+        <div class="lab-step-item ${stepDone ? 'step-completed' : ''}" style="margin-bottom: 12px; background: rgba(10,16,24,0.9); padding: 12px; border-radius: 12px; border: 1px solid rgba(0,240,255,0.18);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <label style="font-weight: 700; color: var(--accent-cyan); display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.86rem;">
+              <input type="checkbox" ${stepDone ? 'checked' : ''} 
+                     onchange="window.CyberLabs.toggleStep('${lab.id}', ${st.step}, this.checked)">
+              Paso ${st.step}: ${st.title}
+            </label>
+            <span class="tag ${stepDone ? 'green' : 'yellow'}" style="font-size:0.68rem;">${stepDone ? '☑ Listo' : '☐ Pendiente'}</span>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">${st.description}</div>
+          <div class="terminal-window" style="margin: 0;">
+            <div class="terminal-header" style="padding:4px 8px; font-size:0.7rem;">
+              <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+              <span style="color: var(--text-muted);">bash</span>
+            </div>
+            <div class="terminal-body" style="padding: 8px; font-size:0.76rem; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <span class="terminal-prompt">$</span> <code style="color:#00f0ff;font-family:monospace">${st.command}</code>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="font-size:0.7rem; padding:2px 8px;" onclick="navigator.clipboard.writeText('${st.command.replace(/'/g, "\\'")}'); window.CyberGamification?.showToast('📋 Comando copiado');">Copiar</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    let questionsHtml = '';
+    (lab.questions || []).forEach(q => {
+      questionsHtml += `
+        <div style="margin-bottom: 12px; background: rgba(10,16,24,0.9); padding: 12px; border-radius: 12px; border: 1px solid rgba(0,240,255,0.18);">
+          <div style="font-weight: 700; font-size: 0.86rem; color: #fff; margin-bottom: 6px;">❓ ${q.question}</div>
+          <div style="display:flex; gap:8px;">
+            <input type="text" class="chat-input" id="lab-ans-${q.id}" placeholder="Escribe tu respuesta..." style="flex:1; height:36px; font-size:0.8rem;">
+            <button class="btn btn-primary btn-sm" onclick="window.CyberLabs.checkQuestion('${lab.id}', '${q.id}', '${q.answer}')">Verificar</button>
+          </div>
+        </div>
+      `;
+    });
+
+    modalContent.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">
+        <h2 style="font-size:1.15rem; font-weight:800; color:#fff; margin:0;">🧪 ${lab.title}</h2>
+        <span class="tag ${isDone ? 'green' : 'cyan'}" style="font-size:0.7rem;">${isDone ? '🟢 Completado' : '🟡 En progreso'}</span>
+      </div>
+      <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px; line-height:1.4;">${lab.description}</p>
+      
+      <h3 style="font-size:0.9rem; color:var(--accent-cyan); font-weight:700; margin-bottom:8px;">Pasos del Laboratorio:</h3>
+      ${stepsHtml}
+
+      ${questionsHtml ? `<h3 style="font-size:0.9rem; color:var(--accent-cyan); font-weight:700; margin-top:14px; margin-bottom:8px;">Preguntas de Verificación:</h3>${questionsHtml}` : ''}
+
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+        <button class="btn btn-secondary" onclick="document.getElementById('lab-modal').classList.remove('active')">Cerrar</button>
+        <button class="btn btn-primary" onclick="window.CyberLabs.finishLab('${lab.id}')">${isDone ? 'Finalizado (XP Obtenido)' : 'Completar Lab (+50 XP)'}</button>
+      </div>
+    `;
+
+    modal.classList.add('active');
   }
 
   toggleStep(labId, stepNum, isChecked) {
-    if (!this.completedSteps[labId]) {
-      this.completedSteps[labId] = new Set();
-    }
-    if (isChecked) {
-      this.completedSteps[labId].add(stepNum);
-      window.CyberGamification.addXP(10, `Paso ${stepNum} de laboratorio ejecutado`, `lab_step_${labId}_${stepNum}`);
-    } else {
-      this.completedSteps[labId].delete(stepNum);
-    }
-    this.render();
+    if (!this.completedSteps[labId]) this.completedSteps[labId] = new Set();
+    if (isChecked) this.completedSteps[labId].add(stepNum);
+    else this.completedSteps[labId].delete(stepNum);
   }
 
-  answerQuestion(labId, qId, selectedIdx, correctIdx, btnEl) {
-    const parent = btnEl.parentElement;
-    parent.querySelectorAll('.quiz-option-btn').forEach(b => {
-      b.classList.remove('correct', 'incorrect');
-      b.disabled = true;
-    });
-
-    if (selectedIdx === correctIdx) {
-      btnEl.classList.add('correct');
-      window.CyberGamification.addXP(25, 'Respuesta correcta en laboratorio', `lab_q_${qId}`);
+  checkQuestion(labId, qId, correctAnswer) {
+    const input = document.getElementById(`lab-ans-${qId}`);
+    if (!input) return;
+    const val = input.value.trim().toLowerCase();
+    if (val === correctAnswer.trim().toLowerCase()) {
+      alert('🎉 ¡Respuesta Correcta! Excelente análisis.');
+      input.style.borderColor = '#39d353';
     } else {
-      btnEl.classList.add('incorrect');
-      if (parent.children[correctIdx]) parent.children[correctIdx].classList.add('correct');
+      alert('❌ Respuesta incorrecta. Vuelve a revisar el comando o la salida de la terminal.');
+      input.style.borderColor = '#ff3c3c';
     }
   }
 
-  completeLab(labId) {
-    const data = this.storage.data;
-    if (!data.completedLabs.includes(labId)) {
-      data.completedLabs.push(labId);
+  finishLab(labId) {
+    const labs = window.CyberData ? window.CyberData.labs || [] : [];
+    const lab = labs.find(l => l.id === labId);
+    if (!lab) return;
+
+    if (!this.storage.data.completedLabs.includes(labId)) {
+      this.storage.data.completedLabs.push(labId);
       this.storage.saveData();
-      window.CyberGamification.addXP(150, 'Laboratorio completado', `lab_completed_${labId}`);
-      if (window.CyberRecorrido) window.CyberRecorrido.triggerConfetti();
-      this.render();
+      if (window.CyberGamification) {
+        window.CyberGamification.addXP(lab.xp || 50, `Laboratorio completado: ${lab.title}`);
+      }
+      alert(`🎉 ¡Laboratorio '${lab.title}' completado! Has ganado +${lab.xp || 50} XP.`);
     }
+
+    const modal = document.getElementById('lab-modal');
+    if (modal) modal.classList.remove('active');
+    this.render();
   }
 }
 

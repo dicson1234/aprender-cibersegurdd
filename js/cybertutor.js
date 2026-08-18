@@ -73,48 +73,94 @@ class CyberTutorEngine {
     return str;
   }
 
-  render(){
-    const c=document.getElementById('cybertutor-root'); if(!c)return;
+  render() {
+    const c = document.getElementById('cybertutor-root'); if (!c) return;
     const notifStatus = ("Notification" in window) ? Notification.permission : 'unsupported';
-    const notifLabel = notifStatus === 'granted' ? '🔔 Notificaciones Activas' : '🔔 Activar Notificaciones';
+    const notifLabel = notifStatus === 'granted' ? '🔔 Notificaciones' : '🔔 Activar';
+    const account = window.CyberAccounts?.getActive();
 
-    c.innerHTML=`
-      <div class="card" style="margin-bottom:20px">
-        <div class="card-header"><h2>🤖 CyberTutor — Tutor de Ciberseguridad</h2><span class="tag cyan">Gemini Ultra Fast + Respuesta en Vivo</span></div>
-        <p style="color:var(--text-muted)">CyberTutor conoce tu nivel, racha y progreso en vivo sin que se lo digas. Respuestas estructuradas e instantáneas.</p>
-      </div>
-      <div class="tutor-container">
-        <div class="tutor-prompts-sidebar">
-          <div style="font-weight:700;color:var(--accent-cyan);margin-bottom:8px">ACCIONES RÁPIDAS</div>
-          <button class="btn btn-primary" style="font-size:.8rem;text-align:left;width:100%;margin-bottom:6px" onclick="CyberTutor.requestDiagnostic()">📊 Mi Diagnóstico Automático</button>
-          <button id="cybertutor-notif-btn" class="btn btn-secondary" style="font-size:.8rem;text-align:left;width:100%;margin-bottom:12px" onclick="CyberTutor.toggleNotifications()">${notifLabel}</button>
+    c.innerHTML = `
+      <div class="chatgpt-web-layout">
+        <!-- Sidebar Assistants & Presets -->
+        <aside class="chatgpt-sidebar">
+          <div class="chatgpt-sidebar-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:1.3rem">🤖</span>
+              <div>
+                <div style="font-weight:800;font-size:0.95rem;color:#fff;">CyberTutor IA</div>
+                <div style="font-size:0.7rem;color:var(--accent-cyan);">Gemini 1.5 Pro Brain</div>
+              </div>
+            </div>
+          </div>
 
-          <div style="font-weight:700;color:var(--accent-cyan);margin-bottom:8px">PROMPTS RECOMENDADOS</div>
-          <button class="btn btn-secondary" style="font-size:.8rem;text-align:left" onclick="CyberTutor.sendPreset('Explícame TCP como si tuviera 10 años.')">👶 TCP como a un niño</button>
-          <button class="btn btn-secondary" style="font-size:.8rem;text-align:left" onclick="CyberTutor.sendPreset('Explícame TCP a nivel técnico universitario y ponme un ejemplo.')">🎓 TCP universitario</button>
-          <button class="btn btn-secondary" style="font-size:.8rem;text-align:left" onclick="CyberTutor.sendPreset('Evalúame con 5 preguntas sobre redes y dime exactamente qué debo repasar.')">📝 Evalúame</button>
-          <button class="btn btn-secondary" style="font-size:.8rem;text-align:left" onclick="CyberTutor.sendPreset('Según mi progreso, ¿qué debería estudiar después?')">🎯 Qué estudiar ahora</button>
-          
-          <div style="margin-top:14px;padding:12px;border-radius:10px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.2);font-size:.8rem">
-            <strong>🧠 Diagnóstico Invisible:</strong><p style="color:var(--text-muted);margin:5px 0 0">Nivel ${this.storage?.data?.level || 1} • ${this.storage?.data?.xp || 0} XP • Racha ${this.storage?.data?.streak || 1} días. CyberTutor lee tu avance automáticamente.</p>
+          <div class="chatgpt-sidebar-section">
+            <div class="sidebar-label">ROL & ASISTENTES</div>
+            <button class="chatgpt-role-btn active" onclick="CyberTutor.sendPreset('Actúa como un Analista SOC Senior y evalúa mis respuestas de seguridad.')">🛡️ Analista SOC Senior</button>
+            <button class="chatgpt-role-btn" onclick="CyberTutor.sendPreset('Actúa como un Auditor de Código de Ciberseguridad e inspecciona mis explicaciones.')">🔍 Auditor de Código</button>
+            <button class="chatgpt-role-btn" onclick="CyberTutor.sendPreset('Actúa como un Pentester Red Team y explícame las vulnerabilidades de forma práctica.')">⚔️ Red Team Pentester</button>
           </div>
-          <button id="cybertutor-clear-btn" class="btn btn-secondary" style="margin-top:12px;width:100%">🗑️ Limpiar chat</button>
-          <button id="cybertutor-config-btn" class="btn btn-secondary" style="margin-top:8px;width:100%">⚙️ Configurar backend</button>
-        </div>
-        <div class="tutor-chat-window">
-          <div class="chat-history" id="tutor-chat-history"><div class="chat-bubble tutor">¡Hola! Soy tu <strong>CyberTutor</strong>. Conozco tu progreso actual (Nivel ${this.storage?.data?.level || 1}, ${this.storage?.data?.xp || 0} XP, Racha: ${this.storage?.data?.streak || 1} días). ¿En qué concepto o laboratorio quieres profundizar hoy?</div></div>
-          <div class="chat-input-bar" style="flex-wrap:wrap">
-            <input type="text" id="tutor-user-input" class="chat-input" placeholder="Escribe tu duda o responde a CyberTutor..." onkeypress="if(event.key==='Enter') CyberTutor.sendUserMessage()" />
-            <button class="btn btn-primary" id="tutor-send-btn">Enviar</button>
-            <button class="btn btn-secondary" id="tutor-mic-btn">🎙️ Hablar</button>
+
+          <div class="chatgpt-sidebar-section">
+            <div class="sidebar-label">PROMPTS RÁPIDOS</div>
+            <button class="chatgpt-prompt-btn" onclick="CyberTutor.requestDiagnostic()">📊 Diagnóstico de Progreso</button>
+            <button class="chatgpt-prompt-btn" onclick="CyberTutor.sendPreset('Explícame la Tríada CIA (Confidencialidad, Integridad, Disponibilidad) con un ejemplo real.')">💡 Explicar Tríada CIA</button>
+            <button class="chatgpt-prompt-btn" onclick="CyberTutor.sendPreset('Guarda el concepto de Firewall en mi glosario con definición técnica y ejemplo.')">📖 Guardar Firewall en Glosario</button>
+            <button class="chatgpt-prompt-btn" onclick="CyberTutor.sendPreset('Evalúame con 3 preguntas sobre Redes y dime exactamente qué debo estudiar.')">📝 Examen Rápido de Redes</button>
           </div>
-        </div>
+
+          <div class="chatgpt-sidebar-footer">
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">
+              👤 <strong>${account ? account.username : 'Usuario Local'}</strong><br>
+              ⚡ Nivel ${this.storage?.data?.level || 1} • ${this.storage?.data?.xp || 0} XP
+            </div>
+            <button id="cybertutor-notif-btn" class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:6px" onclick="CyberTutor.toggleNotifications()">${notifLabel}</button>
+            <button id="cybertutor-clear-btn" class="btn btn-secondary btn-sm" style="width:100%">🗑️ Limpiar Historial</button>
+          </div>
+        </aside>
+
+        <!-- Main Chat Body -->
+        <main class="chatgpt-chat-area">
+          <header class="chatgpt-chat-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="status-indicator-dot"></span>
+              <span style="font-weight:700;font-size:0.9rem;color:#fff;">CyberTutor Assistant</span>
+              <span class="tag cyan" style="font-size:0.68rem;">Gemini 1.5 Pro</span>
+            </div>
+            <div style="font-size:0.76rem;color:var(--text-muted);">
+              Racha: 🔥 ${this.storage?.data?.streak || 1}d
+            </div>
+          </header>
+
+          <div class="chatgpt-messages-container" id="tutor-chat-history">
+            <div class="chatgpt-msg tutor-msg">
+              <div class="msg-avatar">🤖</div>
+              <div class="msg-content">
+                <p>¡Hola <strong>${account ? account.username : 'Estudiante'}</strong>! 👋 Soy tu <strong>CyberTutor IA</strong> impulsado por Gemini 1.5 Pro.</p>
+                <p>Puedo ayudarte a repasar laboratorios, explicarte conceptos complejos de ciberseguridad o <strong>guardar automáticamente cualquier término en tu Glosario personal</strong> (solo pídeme: <em>"Guarda el concepto X en mi glosario"</em>).</p>
+                <p>¿En qué deseas entrenar hoy?</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Fixed Input Bar -->
+          <footer class="chatgpt-input-container">
+            <div class="chatgpt-quick-chips">
+              <button class="chip-btn" onclick="CyberTutor.sendPreset('Explícame qué es XSS y cómo prevenirlo.')">🛡️ ¿Qué es XSS?</button>
+              <button class="chip-btn" onclick="CyberTutor.sendPreset('Guarda la definición de Nmap en mi glosario.')">📖 Guardar Nmap en Glosario</button>
+              <button class="chip-btn" onclick="CyberTutor.sendPreset('¿Cuáles son los puertos más comunes en Nmap y sus servicios?')">🌐 Puertos Comunes</button>
+            </div>
+            <div class="chatgpt-input-wrapper">
+              <input type="text" id="tutor-user-input" class="chatgpt-input" placeholder="Escribe un mensaje a CyberTutor IA... (Ej: Guarda el concepto de Wireshark en mi glosario)" onkeypress="if(event.key==='Enter'){ CyberTutor.sendUserMessage(); }" />
+              <button class="chatgpt-btn-mic" id="tutor-mic-btn" title="Activar micrófono">🎙️</button>
+              <button class="chatgpt-btn-send" id="tutor-send-btn" title="Enviar mensaje">➔</button>
+            </div>
+          </footer>
+        </main>
       </div>`;
 
-    c.querySelector('#tutor-send-btn').onclick=()=>this.sendUserMessage();
-    c.querySelector('#tutor-mic-btn').onclick=()=>this.toggleRecording();
-    c.querySelector('#cybertutor-clear-btn').onclick=()=>this.clearChat();
-    c.querySelector('#cybertutor-config-btn').onclick=()=>this.configureEndpoint();
+    c.querySelector('#tutor-send-btn').onclick = () => this.sendUserMessage();
+    c.querySelector('#tutor-mic-btn').onclick = () => this.toggleRecording();
+    c.querySelector('#cybertutor-clear-btn').onclick = () => this.clearChat();
 
     this.checkStudyReminders();
   }

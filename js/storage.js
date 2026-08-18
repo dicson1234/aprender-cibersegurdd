@@ -27,5 +27,11 @@ class StorageManager{constructor(){this.activeAccountId=null;this.data=cloneDefa
     this.data.aiGlossary=list;
     return this.saveData(this.data,true);
   }
+  deleteAiGlossaryTerm(term){
+    if(!term)return false;
+    const list=asArray(this.data.aiGlossary);
+    this.data.aiGlossary=list.filter(x=>x.term.toLowerCase()!==String(term).toLowerCase());
+    return this.saveData(this.data,true);
+  }
 }
 window.CyberStorage=new StorageManager();window.CyberLabReviewIntervals=REVIEW_INTERVALS;
