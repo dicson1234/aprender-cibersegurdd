@@ -106,7 +106,13 @@
 
     const host = document.getElementById('recorrido-root');
     if (host) {
-      const observer = new MutationObserver(scheduleDraw);
+      const observer = new MutationObserver((mutations) => {
+        const onlyCircuitChanges = mutations.every(mutation => {
+          const nodes = [...mutation.addedNodes, ...mutation.removedNodes];
+          return nodes.length > 0 && nodes.every(node => node.nodeType === 1 && node.classList?.contains('circuit-backbone'));
+        });
+        if (!onlyCircuitChanges) scheduleDraw();
+      });
       observer.observe(host, { childList: true, subtree: true });
     }
 
