@@ -166,8 +166,25 @@ class CyberLabApp {
     const container = document.getElementById('glossary-root');
     if (!container) return;
     const account = window.CyberAccounts?.getActive();
-    const officialGlossary = window.CyberData?.glossary || [];
+    let officialGlossary = window.CyberData?.glossary || [];
     const aiGlossary = window.CyberStorage?.data?.aiGlossary || [];
+
+    // Fallback: If dataset was not yet loaded into memory, fetch immediately
+    if (officialGlossary.length === 0 && !this._fetchingGlossary) {
+      this._fetchingGlossary = true;
+      fetch('./data/glossary.json')
+        .then(r => r.json())
+        .then(data => {
+          window.CyberData = window.CyberData || {};
+          window.CyberData.glossary = data || [];
+          this._fetchingGlossary = false;
+          this.renderGlossary(filterMode, searchQuery);
+        })
+        .catch(err => {
+          console.error('Error al obtener glossary.json:', err);
+          this._fetchingGlossary = false;
+        });
+    }
     
     let combinedGlossary = [...aiGlossary, ...officialGlossary];
 

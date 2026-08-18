@@ -1,9 +1,9 @@
 /* CyberLab Offline-First Service Worker */
-const CACHE_NAME = 'cyberlab-v19-chatgpt-mobile-fix-v9';
+const CACHE_NAME = 'cyberlab-v20-mobile-touch-glosario-fix-v10';
 const ASSETS = [
-  './','./index.html?v=9','./manifest.json','./icon.svg',
-  './css/variables.css?v=9','./css/main.css?v=9','./css/components.css?v=9','./css/mobile.css?v=9','./css/mobile-polish.css?v=9',
-  './js/accounts.js?v=9','./js/storage.js?v=9','./js/account_bootstrap.js?v=9','./js/gamification.js?v=9','./js/navigation.js?v=9','./js/dashboard.js?v=9','./js/knowledge_map.js?v=9','./js/learning_tree.js?v=9','./js/recorrido_engine.js?v=9','./js/cybertutor_assistant.js?v=9','./js/onboarding.js?v=9','./js/labs_engine.js?v=9','./js/quizzes_engine.js?v=9','./js/spaced_repetition.js?v=9','./js/notes_engine.js?v=9','./js/resources_engine.js?v=9','./js/cybertutor.js?v=9','./js/search.js?v=9','./js/app.js?v=9','./js/profile_accounts.js?v=9','./js/mobile_ui.js?v=9','./js/mobile_polish.js?v=9',
+  './','./index.html?v=10','./manifest.json','./icon.svg',
+  './css/variables.css?v=10','./css/main.css?v=10','./css/components.css?v=10','./css/mobile.css?v=10','./css/mobile-polish.css?v=10',
+  './js/accounts.js?v=10','./js/storage.js?v=10','./js/account_bootstrap.js?v=10','./js/gamification.js?v=10','./js/navigation.js?v=10','./js/dashboard.js?v=10','./js/knowledge_map.js?v=10','./js/learning_tree.js?v=10','./js/recorrido_engine.js?v=10','./js/cybertutor_assistant.js?v=10','./js/onboarding.js?v=10','./js/labs_engine.js?v=10','./js/quizzes_engine.js?v=10','./js/spaced_repetition.js?v=10','./js/notes_engine.js?v=10','./js/resources_engine.js?v=10','./js/cybertutor.js?v=10','./js/search.js?v=10','./js/app.js?v=10','./js/profile_accounts.js?v=10','./js/mobile_ui.js?v=10','./js/mobile_polish.js?v=10',
   './data/modules.json','./data/quizzes.json','./data/challenges.json','./data/labs.json','./data/resources.json','./data/glossary.json','./data/tools.json','./data/achievements.json','./data/projects.json','./data/roadmaps.json','./data/cases.json','./data/mitre.json'
 ];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
