@@ -787,3 +787,66 @@
     padding: 16px 14px calc(16px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* Thought Bubble Manual Close Button */
+.robot-thought-bubble {
+  display: flex !important;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.robot-thought-bubble .thought-content {
+  flex: 1;
+  min-width: 0;
+}
+.robot-thought-bubble .thought-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #aebccc;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background 0.2s ease, color 0.2s ease;
+  padding: 0;
+}
+.robot-thought-bubble .thought-close-btn:hover,
+.robot-thought-bubble .thought-close-btn:active {
+  background: rgba(255, 60, 60, 0.3);
+  color: #ffffff;
+}
+
+/* Auto-Glossary Mini Toast Notification */
+.cybertutor-mini-toast {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(14, 26, 40, 0.95);
+  border: 1px solid var(--accent-cyan, #00f0ff);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 240, 255, 0.3);
+  color: #e6fdff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 20px;
+  z-index: 10030;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  white-space: nowrap;
+  max-width: 90vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cybertutor-mini-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

@@ -1,5 +1,5 @@
 /* CyberLab — CyberTutor Floating IA Assistant & Context Memory Component
-   Autonomous Robot Companion with Eye-Tracking, Micro-Emotions & Unsolicited Insights */
+   Autonomous Robot Companion with Eye-Tracking, Micro-Emotions, Unsolicited Insights & Auto-Glossary */
 class CyberTutorAssistant {
   constructor() {
     this.storage = window.CyberStorage;
@@ -9,7 +9,8 @@ class CyberTutorAssistant {
     this.isAutonomousIdle = false;
     this.thoughtTimer = null;
     this.lastUserActivity = Date.now();
-    this.activeThought = null;
+    this.activeThoughtPrompt = null;
+    this.userDismissedThoughts = false;
     this.initWidget();
   }
 
@@ -42,7 +43,8 @@ class CyberTutorAssistant {
     thoughtBubble.className = 'robot-thought-bubble hidden';
     thoughtBubble.setAttribute('role', 'status');
     thoughtBubble.setAttribute('aria-live', 'polite');
-    thoughtBubble.onclick = () => {
+    thoughtBubble.onclick = (e) => {
+      if (e.target.closest('.thought-close-btn')) return;
       if (this.activeThoughtPrompt) {
         this.sendQuickPrompt(this.activeThoughtPrompt);
       } else {
@@ -77,7 +79,7 @@ class CyberTutorAssistant {
         <span class="ctx-pill">🔥 ${this.storage?.data?.streak || 1}d Racha</span>
       </div>
       <div class="drawer-messages-body" id="cybertutor-drawer-messages">
-        <div class="chat-bubble tutor">¡Hola 👋! Soy tu <strong>CyberTutor</strong> impulsado por Gemini. Estoy observando tu progreso en ciberseguridad. ¿En qué puedo guiarte hoy?</div>
+        <div class="chat-bubble tutor">¡Hola 👋! Soy tu <strong>CyberTutor</strong> impulsado por Gemini. Cualquier concepto de ciberseguridad que consultemos se guardará automáticamente en tu <strong>Glosario</strong>.</div>
       </div>
       <div class="drawer-quick-prompts">
         <button class="quick-chip" data-prompt="Dame un ejemplo práctico de la Tríada CIA.">💡 Ejercicio CIA</button>
@@ -155,19 +157,19 @@ class CyberTutorAssistant {
   startAutonomousLife() {
     // 1. Autonomous Glance Loop when user is idle
     setInterval(() => {
-      if (Date.now() - this.lastUserActivity > 2500) {
+      if (Date.now() - this.lastUserActivity > 3000) {
         this.isAutonomousIdle = true;
         this.performAutonomousGlance();
       }
-    }, 4200);
+    }, 5000);
 
-    // 2. Unsolicited Spontaneous Thought & Insight Loop ("opiniones de la nada")
-    setTimeout(() => this.triggerSpontaneousThought(), 6000);
-    setInterval(() => this.triggerSpontaneousThought(), 32000);
+    // 2. Unsolicited Spontaneous Thought & Insight Loop (85s interval, highly discrete)
+    setTimeout(() => this.triggerSpontaneousThought(), 12000);
+    setInterval(() => this.triggerSpontaneousThought(), 85000);
 
-    // 3. React to hash/view navigation
+    // 3. React to view navigation
     window.addEventListener('hashchange', () => {
-      setTimeout(() => this.triggerContextualThought(), 1200);
+      setTimeout(() => this.triggerContextualThought(), 2000);
     });
   }
 
@@ -176,48 +178,35 @@ class CyberTutorAssistant {
     const fab = document.getElementById('cybertutor-fab');
     if (!fab) return;
 
-    // Pick a random target to look at
     const targets = [
-      { x: window.innerWidth * 0.8, y: 35 }, // Header XP / Level
-      { x: window.innerWidth * 0.5, y: window.innerHeight * 0.4 }, // Center screen
-      { x: window.innerWidth * 0.2, y: window.innerHeight * 0.85 }, // Bottom Nav
-      { x: window.innerWidth * 0.9, y: window.innerHeight * 0.9 } // Self area
+      { x: window.innerWidth * 0.8, y: 35 },
+      { x: window.innerWidth * 0.5, y: window.innerHeight * 0.4 },
+      { x: window.innerWidth * 0.2, y: window.innerHeight * 0.85 },
+      { x: window.innerWidth * 0.9, y: window.innerHeight * 0.9 }
     ];
     const picked = targets[Math.floor(Math.random() * targets.length)];
     this.updateEyesPosition(picked.x, picked.y);
 
-    // Random expression chance
-    if (Math.random() > 0.6) {
+    if (Math.random() > 0.7) {
       fab.classList.add('emotion-happy');
       setTimeout(() => fab.classList.remove('emotion-happy'), 1500);
     }
   }
 
   triggerSpontaneousThought() {
-    if (this.isOpen || document.body.classList.contains('account-gate-active')) return;
+    if (this.isOpen || this.userDismissedThoughts || document.body.classList.contains('account-gate-active')) return;
 
     const hash = (location.hash || '#dashboard').replace('#', '');
-    const data = this.storage?.data || {};
-
     const thoughts = {
       dashboard: [
-        { text: "🤖 ¡Hola! Tu racha actual es constante. ¿Repasamos un laboratorio hoy?", prompt: "Recomiéndame el mejor laboratorio para mi nivel." },
-        { text: "💡 Tip: El 80% de los incidentes de seguridad comienzan con correos de Phishing.", prompt: "Explícame las técnicas de Phishing y cómo detectarlas." },
-        { text: "🛡️ Tríada CIA: Confidencialidad, Integridad y Disponibilidad.", prompt: "Dame un caso real de violación de Integridad de datos." }
+        { text: "🤖 ¡Tu racha sigue activa! ¿Practicamos un laboratorio rápido?", prompt: "Recomiéndame el mejor laboratorio para mi nivel." },
+        { text: "💡 Tip: El 80% de ataques inician con Phishing.", prompt: "Explícame las técnicas de Phishing y cómo detectarlas." }
       ],
       recorrido: [
-        { text: "🧭 ¡El camino en circuito te guía etapa por etapa!", prompt: " Explícame el objetivo de la etapa actual en mi recorrido." },
-        { text: "⚡ ¿Sabías que dominar Nmap te abre las puertas al Red Teaming?", prompt: "Dame los 5 comandos esenciales de Nmap con sus sintaxis." }
+        { text: "🧭 ¡Cada nodo del circuito refuerza tu aprendizaje!", prompt: "Explícame el objetivo de la etapa actual en mi recorrido." }
       ],
       labs: [
-        { text: "🧪 En la terminal interactiva puedes ejecutar comandos reales simulados.", prompt: "Dame una guía rápida para el laboratorio de análisis de tráfico." },
-        { text: "🔍 Si ves tráfico HTTP sin TLS (puerto 80), las credenciales viajan en texto plano.", prompt: "¿Por qué Wireshark puede capturar contraseñas en HTTP?" }
-      ],
-      quizzes: [
-        { text: "📝 Recuerda: para aprobar una evaluación necesitas el 80% o más.", prompt: "Dame un mini test de 3 preguntas de práctica sobre redes." }
-      ],
-      notes: [
-        { text: "📓 Tomar notas activa la retención a largo plazo. ¡Apunta tus comandos clave!", prompt: "¿Cómo estructurar mis notas de ciberseguridad eficientemente?" }
+        { text: "🧪 En la terminal puedes probar comandos simulados.", prompt: "Dame una guía rápida para el laboratorio de análisis de tráfico." }
       ]
     };
 
@@ -227,25 +216,29 @@ class CyberTutorAssistant {
   }
 
   triggerContextualThought() {
+    if (this.isOpen || this.userDismissedThoughts) return;
     const hash = (location.hash || '#dashboard').replace('#', '');
     const viewNames = {
       dashboard: 'Dashboard', recorrido: 'Recorrido', labs: 'Laboratorios',
-      quizzes: 'Exámenes', map: 'Mapa de Conocimientos', cybertutor: 'CyberTutor IA',
-      notes: 'Mis Apuntes', resources: 'Recursos', profile: 'Mi Perfil'
+      quizzes: 'Exámenes', map: 'Mapa de Proceso', cybertutor: 'CyberTutor IA',
+      notes: 'Mis Apuntes', resources: 'Recursos', glossary: 'Glosario'
     };
     const title = viewNames[hash];
-    if (title && !this.isOpen) {
-      this.showThoughtBubble(`📍 Entraste a <strong>${title}</strong>. ¡Estoy listo si tienes preguntas!`, `Dame un resumen rápido de la sección ${title}`);
+    if (title) {
+      this.showThoughtBubble(`📍 Sección <strong>${title}</strong>. ¡Consulta lo que necesites!`, `Dame un resumen rápido de la sección ${title}`);
     }
   }
 
   showThoughtBubble(textHTML, promptText = null) {
     const bubble = document.getElementById('robot-thought-bubble');
     const fab = document.getElementById('cybertutor-fab');
-    if (!bubble) return;
+    if (!bubble || this.userDismissedThoughts) return;
 
     this.activeThoughtPrompt = promptText;
-    bubble.innerHTML = `<span>${textHTML}</span><span class="thought-close" onclick="event.stopPropagation(); window.CyberTutorAssistant.hideThoughtBubble();">✕</span>`;
+    bubble.innerHTML = `
+      <div class="thought-content"><span>${textHTML}</span></div>
+      <button class="thought-close-btn" aria-label="Cerrar aviso" onclick="event.stopPropagation(); window.CyberTutorAssistant.hideThoughtBubble(true);">✕</button>
+    `;
     bubble.classList.remove('hidden');
 
     if (fab) fab.classList.add('emotion-happy');
@@ -253,14 +246,18 @@ class CyberTutorAssistant {
     clearTimeout(this.thoughtTimer);
     this.thoughtTimer = setTimeout(() => {
       this.hideThoughtBubble();
-    }, 9000);
+    }, 7500);
   }
 
-  hideThoughtBubble() {
+  hideThoughtBubble(userInitiated = false) {
     const bubble = document.getElementById('robot-thought-bubble');
     const fab = document.getElementById('cybertutor-fab');
     if (bubble) bubble.classList.add('hidden');
     if (fab) fab.classList.remove('emotion-happy');
+    if (userInitiated) {
+      this.userDismissedThoughts = true;
+      setTimeout(() => { this.userDismissedThoughts = false; }, 180000); // 3 min silence
+    }
   }
 
   toggleDrawer(force) {
@@ -317,12 +314,61 @@ class CyberTutorAssistant {
       }
       if (typingBubble) typingBubble.innerHTML = window.CyberTutor?.parseMarkdown?.(answer) || this.escape(answer);
       this.history.push({ role: 'user', content: msg }, { role: 'model', content: answer });
+
+      // Auto-Save concept to Glosario
+      this.autoSaveToGlossary(msg, answer);
+
     } catch (e) {
       console.error(e);
       if (typingBubble) typingBubble.textContent = `⚠️ No pude conectar con CyberTutor. ${e.message || 'Error de red'}`;
     } finally {
       if (fab) fab.classList.remove('emotion-thinking');
     }
+  }
+
+  autoSaveToGlossary(question, answer) {
+    if (!window.CyberStorage?.addAiGlossaryTerm) return;
+
+    const termMatch = question.match(/(?:qué es|que es|explicame|explícame|definición de|definicion de|significa|concepto de|cómo funciona|como funciona)\s+([a-záéíóúñ0-9\s\-_/]+)/i);
+    let term = termMatch ? termMatch[1].trim() : null;
+
+    if (!term) {
+      const knownTerms = ['phishing', 'firewall', 'xss', 'sql injection', 'mitm', 'ransomware', 'vpn', 'dns', 'tcp', 'ddos', 'zero day', 'triada cia', 'nmap', 'wireshark', 'hash', 'cifrado', 'soc', 'siem', 'malware'];
+      const found = knownTerms.find(t => question.toLowerCase().includes(t));
+      if (found) term = found.toUpperCase();
+    }
+
+    if (term) {
+      term = term.replace(/[?¿!¡.,]/g, '').trim();
+      term = term.charAt(0).toUpperCase() + term.slice(1);
+
+      const plainText = answer.replace(/<[^>]+>/g, '').replace(/[*_#`]/g, '');
+      const sentences = plainText.split('.').map(s => s.trim()).filter(Boolean);
+      const simpleDef = sentences[0] ? sentences[0] + '.' : 'Explicación generada por CyberTutor IA.';
+      const techDef = sentences[1] ? sentences[1] + '.' : simpleDef;
+
+      window.CyberStorage.addAiGlossaryTerm({
+        term: term,
+        simpleDef: simpleDef.slice(0, 220),
+        techDef: techDef.slice(0, 300),
+        example: `Aprendido en consulta con CyberTutor IA.`,
+        category: '🤖 IA CyberTutor'
+      });
+
+      this.showMiniToast(`📖 Concepto '${term}' guardado en tu Glosario.`);
+    }
+  }
+
+  showMiniToast(text) {
+    const toast = document.createElement('div');
+    toast.className = 'cybertutor-mini-toast';
+    toast.innerHTML = text;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('visible'), 50);
+    setTimeout(() => {
+      toast.classList.remove('visible');
+      setTimeout(() => toast.remove(), 300);
+    }, 3200);
   }
 
   appendBubble(role, text) {

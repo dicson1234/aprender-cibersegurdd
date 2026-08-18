@@ -165,31 +165,51 @@ class CyberLabApp {
   renderGlossary() {
     const container = document.getElementById('glossary-root');
     if (!container) return;
-    const glossary = window.CyberData.glossary || [];
+    const officialGlossary = window.CyberData?.glossary || [];
+    const aiGlossary = window.CyberStorage?.data?.aiGlossary || [];
+    const combinedGlossary = [...aiGlossary, ...officialGlossary];
 
     let html = `
-      <div class="card" style="margin-bottom: 20px;">
-        <h2 style="font-size: 1.4rem;">📖 Diccionario & Glosario de Ciberseguridad</h2>
-        <p style="color: var(--text-muted);">Términos clave explicados de forma sencilla y técnica.</p>
+      <div class="card" style="margin-bottom: 14px; padding: 14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <div>
+            <h2 style="font-size: 1.2rem; margin:0 0 4px;">📖 Glosario de Ciberseguridad</h2>
+            <p style="font-size:.82rem; color: var(--text-muted); margin:0;">Términos oficiales y conceptos aprendidos con CyberTutor IA.</p>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <span class="tag cyan" style="font-size:.72rem;">📚 ${officialGlossary.length} Oficiales</span>
+            <span class="tag purple" style="font-size:.72rem;background:rgba(163,113,247,.18);color:#d0b5ff;border:1px solid rgba(163,113,247,.3);">🤖 ${aiGlossary.length} Por IA</span>
+          </div>
+        </div>
       </div>
       <div class="grid-cards">
     `;
 
-    glossary.forEach(g => {
-      html += `
-        <div class="card">
-          <div class="card-header">
-            <span class="tag cyan">${g.term.split(' ')[0]}</span>
+    if (combinedGlossary.length === 0) {
+      html += `<div class="card" style="text-align:center;padding:24px;color:var(--text-muted);">No hay términos en el glosario aún. ¡Hazle preguntas a CyberTutor IA para construir el tuyo!</div>`;
+    } else {
+      combinedGlossary.forEach(g => {
+        const isAi = g.isAi || g.category === '🤖 IA CyberTutor';
+        const tagClass = isAi ? 'purple' : 'cyan';
+        const tagLabel = isAi ? '🤖 IA CyberTutor' : (g.term.split(' ')[0] || 'Oficial');
+
+        html += `
+          <div class="card" style="${isAi ? 'border-color: rgba(163,113,247,.35); background: rgba(18,14,30,.8);' : ''}">
+            <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span class="tag ${tagClass}">${tagLabel}</span>
+              ${isAi ? `<span style="font-size:.7rem;color:#a371f7;">Guardado por IA</span>` : ''}
+            </div>
+            <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 6px; color:#fff;">${g.term}</h3>
+            <p style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 6px; line-height:1.4;"><strong>Explicación:</strong> ${g.simpleDef}</p>
+            ${g.techDef && g.techDef !== g.simpleDef ? `<p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; line-height:1.35;"><strong>Técnica:</strong> ${g.techDef}</p>` : ''}
+            ${g.example ? `
+            <div style="background: rgba(0,240,255,.06); padding: 8px 10px; border-radius: 10px; font-size: 0.78rem; color: var(--accent-yellow); border:1px solid rgba(0,240,255,.12);">
+              💡 <strong>Ejemplo:</strong> ${g.example}
+            </div>` : ''}
           </div>
-          <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">${g.term}</h3>
-          <p style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 10px;"><strong>Definición Sencilla:</strong> ${g.simpleDef}</p>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;"><strong>Técnica:</strong> ${g.techDef}</p>
-          <div style="background: var(--bg-surface); padding: 8px; border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--accent-yellow);">
-            💡 <strong>Ejemplo:</strong> ${g.example}
-          </div>
-        </div>
-      `;
-    });
+        `;
+      });
+    }
 
     html += `</div>`;
     container.innerHTML = html;
