@@ -963,16 +963,21 @@
 .chatgpt-messages-container {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  overflow-x: hidden;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .chatgpt-msg {
   display: flex;
-  gap: 12px;
-  max-width: 85%;
+  gap: 10px;
+  max-width: 90%;
+  box-sizing: border-box;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 .chatgpt-msg.tutor-msg {
   align-self: flex-start;
@@ -983,15 +988,15 @@
 }
 
 .msg-avatar {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: rgba(0, 240, 255, 0.15);
   border: 1px solid rgba(0, 240, 255, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   flex: 0 0 auto;
 }
 .user-msg .msg-avatar {
@@ -1000,23 +1005,60 @@
 }
 
 .msg-content {
-  background: rgba(16, 24, 36, 0.9);
-  border: 1px solid rgba(0, 240, 255, 0.16);
-  padding: 10px 14px;
+  background: rgba(16, 24, 36, 0.95);
+  border: 1px solid rgba(0, 240, 255, 0.18);
+  padding: 10px 12px;
   border-radius: 16px;
-  font-size: 0.86rem;
+  font-size: 0.85rem;
   line-height: 1.45;
   color: #e2eeff;
+  max-width: 100%;
+  box-sizing: border-box;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
+
+.msg-content p {
+  margin: 4px 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.msg-content pre {
+  background: rgba(5, 8, 14, 0.95);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 10px;
+  padding: 10px;
+  margin: 8px 0;
+  overflow-x: auto;
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #00f0ff;
+}
+
+.msg-content code {
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.msg-content ul, .msg-content ol {
+  padding-left: 18px;
+  margin: 6px 0;
+}
+
 .user-msg .msg-content {
-  background: linear-gradient(135deg, rgba(0, 120, 200, 0.4), rgba(14, 26, 42, 0.9));
-  border-color: rgba(0, 240, 255, 0.3);
+  background: linear-gradient(135deg, rgba(0, 120, 200, 0.45), rgba(14, 26, 42, 0.95));
+  border-color: rgba(0, 240, 255, 0.35);
 }
 
 .chatgpt-input-container {
-  padding: 10px 16px 14px;
-  background: rgba(12, 18, 26, 0.95);
+  padding: 8px 12px 12px;
+  background: rgba(12, 18, 26, 0.98);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-sizing: border-box;
 }
 
 .chatgpt-quick-chips {
@@ -1025,12 +1067,13 @@
   margin-bottom: 8px;
   overflow-x: auto;
   padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
 }
 .chip-btn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(0, 240, 255, 0.18);
   color: #b0e5ff;
-  font-size: 0.74rem;
+  font-size: 0.73rem;
   padding: 4px 10px;
   border-radius: 12px;
   white-space: nowrap;
@@ -1044,11 +1087,11 @@
 .chatgpt-input-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(18, 26, 38, 0.9);
+  gap: 6px;
+  background: rgba(18, 26, 38, 0.95);
   border: 1px solid rgba(0, 240, 255, 0.3);
   border-radius: 16px;
-  padding: 4px 6px 4px 12px;
+  padding: 4px 6px 4px 10px;
 }
 
 .chatgpt-input {
@@ -1056,9 +1099,10 @@
   background: transparent;
   border: none;
   color: #ffffff;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   outline: none;
-  height: 38px;
+  height: 36px;
+  min-width: 0;
 }
 
 .chatgpt-btn-mic,
@@ -1066,14 +1110,15 @@
   background: rgba(0, 240, 255, 0.15);
   border: 1px solid rgba(0, 240, 255, 0.3);
   color: #ffffff;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  flex: 0 0 auto;
   transition: all 0.2s ease;
 }
 .chatgpt-btn-send {
@@ -1086,13 +1131,24 @@
   transform: scale(1.05);
 }
 
+.cybertutor-mobile-btn {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .chatgpt-web-layout {
     grid-template-columns: 1fr;
-    height: calc(100vh - 140px);
+    height: calc(100vh - 130px);
+    max-height: calc(100dvh - 110px);
     border-radius: 14px;
   }
   .chatgpt-sidebar {
     display: none;
+  }
+  .cybertutor-mobile-btn {
+    display: inline-flex;
+  }
+  .chatgpt-msg {
+    max-width: 95%;
   }
 }

@@ -121,13 +121,14 @@ class CyberTutorEngine {
         <!-- Main Chat Body -->
         <main class="chatgpt-chat-area">
           <header class="chatgpt-chat-header">
-            <div style="display:flex;align-items:center;gap:8px;">
+            <div style="display:flex;align-items:center;gap:6px;overflow:hidden;">
               <span class="status-indicator-dot"></span>
-              <span style="font-weight:700;font-size:0.9rem;color:#fff;">CyberTutor Assistant</span>
-              <span class="tag cyan" style="font-size:0.68rem;">Gemini 1.5 Pro</span>
+              <span style="font-weight:700;font-size:0.88rem;color:#fff;white-space:nowrap;">CyberTutor</span>
+              <span class="tag cyan" style="font-size:0.65rem;">Gemini 1.5</span>
             </div>
-            <div style="font-size:0.76rem;color:var(--text-muted);">
-              Racha: 🔥 ${this.storage?.data?.streak || 1}d
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button class="btn btn-secondary btn-sm cybertutor-mobile-btn" onclick="CyberTutor.openPromptsModal()" title="Roles y Prompts Rápidos" style="font-size:0.75rem;padding:4px 8px;">📋 Roles</button>
+              <button class="btn btn-secondary btn-sm" onclick="CyberTutor.openConfigModal()" title="Configuración de IA" style="font-size:0.75rem;padding:4px 8px;">⚙️ Opciones</button>
             </div>
           </header>
 
@@ -160,9 +161,133 @@ class CyberTutorEngine {
 
     c.querySelector('#tutor-send-btn').onclick = () => this.sendUserMessage();
     c.querySelector('#tutor-mic-btn').onclick = () => this.toggleRecording();
-    c.querySelector('#cybertutor-clear-btn').onclick = () => this.clearChat();
 
     this.checkStudyReminders();
+  }
+
+  openConfigModal() {
+    let modal = document.getElementById('cybertutor-config-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'cybertutor-config-modal';
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `<div class="modal-card" style="max-width:500px;"><button class="modal-close" onclick="document.getElementById('cybertutor-config-modal').classList.remove('active')">✕</button><div id="cybertutor-config-modal-content"></div></div>`;
+      document.body.appendChild(modal);
+    }
+    const currentEndpoint = this.endpoint();
+    const account = window.CyberAccounts?.getActive();
+    const notifStatus = ("Notification" in window) ? Notification.permission : 'unsupported';
+    const notifLabel = notifStatus === 'granted' ? '🔔 Notificaciones Activas' : '🔔 Activar Notificaciones';
+
+    const content = modal.querySelector('#cybertutor-config-modal-content');
+    content.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <span style="font-size:1.6rem">⚙️</span>
+        <div>
+          <h3 style="font-size:1.1rem;font-weight:800;color:#fff;margin:0;">Opciones & Configuración IA</h3>
+          <p style="font-size:0.78rem;color:var(--text-muted);margin:0;">Ajustes del motor CyberTutor y backend Cloudflare.</p>
+        </div>
+      </div>
+
+      <div style="background:rgba(8,12,18,0.8);padding:12px;border-radius:12px;border:1px solid rgba(0,240,255,0.15);margin-bottom:14px;">
+        <label style="font-size:0.8rem;font-weight:700;color:var(--accent-cyan);display:block;margin-bottom:4px;">🌐 Backend Cloudflare Worker Endpoint:</label>
+        <input type="text" id="cybertutor-endpoint-input" class="chat-input" value="${this.esc(currentEndpoint)}" style="width:100%;height:38px;font-size:0.8rem;margin-bottom:8px;">
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-primary btn-sm" onclick="CyberTutor.saveEndpoint()">Guardar Endpoint</button>
+          <button class="btn btn-secondary btn-sm" onclick="CyberTutor.resetEndpoint()">Restablecer por Defecto</button>
+        </div>
+      </div>
+
+      <div style="background:rgba(8,12,18,0.8);padding:12px;border-radius:12px;border:1px solid rgba(163,113,247,0.18);margin-bottom:14px;">
+        <label style="font-size:0.8rem;font-weight:700;color:#d0b5ff;display:block;margin-bottom:6px;">⏱️ Frecuencia del Asistente Autónomo:</label>
+        <select id="cybertutor-interval-select" class="chat-input" style="width:100%;height:38px;font-size:0.8rem;margin-bottom:8px;" onchange="CyberTutor.updateInterval(this.value)">
+          <option value="60000" ${localStorage.getItem('cyberlab_tutor_interval')==='60000'?'selected':''}>Cada 60 segundos</option>
+          <option value="90000" ${!localStorage.getItem('cyberlab_tutor_interval')||localStorage.getItem('cyberlab_tutor_interval')==='90000'?'selected':''}>Cada 90 segundos (Recomendado)</option>
+          <option value="180000" ${localStorage.getItem('cyberlab_tutor_interval')==='180000'?'selected':''}>Cada 3 minutos</option>
+          <option value="300000" ${localStorage.getItem('cyberlab_tutor_interval')==='300000'?'selected':''}>Cada 5 minutos</option>
+        </select>
+        <span style="font-size:0.74rem;color:var(--text-muted);">Define la frecuencia con la que la burbuja flotante te ofrece consejos de estudio.</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        <button class="btn btn-secondary" onclick="CyberTutor.requestDiagnostic(); document.getElementById('cybertutor-config-modal').classList.remove('active');">📊 Generar Diagnóstico de Progreso</button>
+        <button class="btn btn-secondary" onclick="CyberTutor.toggleNotifications();">${notifLabel}</button>
+        <button class="btn btn-secondary" style="color:#ff6b6b;" onclick="CyberTutor.clearChat(); document.getElementById('cybertutor-config-modal').classList.remove('active');">🗑️ Limpiar Historial de Chat</button>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="document.getElementById('cybertutor-config-modal').classList.remove('active')">Cerrar</button>
+      </div>
+    `;
+    modal.classList.add('active');
+  }
+
+  openPromptsModal() {
+    let modal = document.getElementById('cybertutor-prompts-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'cybertutor-prompts-modal';
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `<div class="modal-card" style="max-width:480px;"><button class="modal-close" onclick="document.getElementById('cybertutor-prompts-modal').classList.remove('active')">✕</button><div id="cybertutor-prompts-modal-content"></div></div>`;
+      document.body.appendChild(modal);
+    }
+    const content = modal.querySelector('#cybertutor-prompts-modal-content');
+    content.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <span style="font-size:1.6rem">📋</span>
+        <div>
+          <h3 style="font-size:1.1rem;font-weight:800;color:#fff;margin:0;">Roles y Prompts Rápido</h3>
+          <p style="font-size:0.78rem;color:var(--text-muted);margin:0;">Selecciona una modalidad o consulta recomendada.</p>
+        </div>
+      </div>
+
+      <div class="sidebar-label" style="margin-bottom:6px;">ROL & ASISTENTES</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+        <button class="chatgpt-role-btn active" onclick="CyberTutor.sendPreset('Actúa como un Analista SOC Senior y evalúa mis respuestas de seguridad.'); document.getElementById('cybertutor-prompts-modal').classList.remove('active');">🛡️ Analista SOC Senior</button>
+        <button class="chatgpt-role-btn" onclick="CyberTutor.sendPreset('Actúa como un Auditor de Código de Ciberseguridad e inspecciona mis explicaciones.'); document.getElementById('cybertutor-prompts-modal').classList.remove('active');">🔍 Auditor de Código</button>
+        <button class="chatgpt-role-btn" onclick="CyberTutor.sendPreset('Actúa como un Pentester Red Team y explícame las vulnerabilidades de forma práctica.'); document.getElementById('cybertutor-prompts-modal').classList.remove('active');">⚔️ Red Team Pentester</button>
+      </div>
+
+      <div class="sidebar-label" style="margin-bottom:6px;">PROMPTS RECOMENDADOS</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+        <button class="chatgpt-prompt-btn" onclick="CyberTutor.requestDiagnostic(); document.getElementById('cybertutor-prompts-modal').classList.remove('active');">📊 Diagnóstico de Progreso</button>
+        <button class="chatgpt-prompt-btn" onclick="CyberTutor.sendPreset('Explícame la Tríada CIA (Confidencialidad, Integridad, Disponibilidad) con un ejemplo real.'); document.getElementById('cybertutor-prompts-modal').classList.remove('active');">💡 Explicar Tríada CIA</button>
+        <button class="chatgpt-prompt-btn" onclick="CyberTutor.sendPreset('Guarda el concepto de Firewall en mi glosario con definición técnica y ejemplo.'); document.getElementById('cybertutor-prompts-modal').classList.remove('active');">📖 Guardar Firewall en Glosario</button>
+        <button class="chatgpt-prompt-btn" onclick="CyberTutor.sendPreset('Evalúame con 3 preguntas sobre Redes y dime exactamente qué debo estudiar.'); document.getElementById('cybertutor-prompts-modal').classList.remove('active');">📝 Examen Rápido de Redes</button>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="document.getElementById('cybertutor-prompts-modal').classList.remove('active')">Cerrar</button>
+      </div>
+    `;
+    modal.classList.add('active');
+  }
+
+  saveEndpoint() {
+    const input = document.getElementById('cybertutor-endpoint-input');
+    if (!input) return;
+    const val = input.value.trim();
+    if (val) {
+      localStorage.setItem('cyberlab_cybertutor_endpoint', val);
+      alert('✅ Endpoint guardado correctamente.');
+    }
+  }
+
+  resetEndpoint() {
+    localStorage.removeItem('cyberlab_cybertutor_endpoint');
+    const input = document.getElementById('cybertutor-endpoint-input');
+    if (input) input.value = CYBERLAB_CYBERTUTOR_ENDPOINT;
+    alert('✅ Endpoint restablecido al servidor por defecto.');
+  }
+
+  updateInterval(val) {
+    if (val) {
+      localStorage.setItem('cyberlab_tutor_interval', val);
+      if (window.CyberTutorAssistant) {
+        window.CyberTutorAssistant.thoughtIntervalMs = Number(val);
+      }
+      alert('⏱️ Intervalo del asistente actualizado.');
+    }
   }
 
   addBubble(role, text, html = false) {
