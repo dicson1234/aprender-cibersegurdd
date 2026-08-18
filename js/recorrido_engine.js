@@ -109,45 +109,42 @@ class RecorridoEngine {
     if (!container) return;
 
     const modules = window.CyberData?.modules || [];
-    const data = this.storage.data;
+    const data = this.storage.data || {};
 
-    // Calculate total course completion
-    const completedCount = modules.filter(m => data.completedModules.includes(m.id)).length;
+    const completedCount = modules.filter(m => (data.completedModules || []).includes(m.id)).length;
     const progressPct = modules.length > 0 ? Math.round((completedCount / modules.length) * 100) : 0;
+    const streakLabel = (data.streak || 1) === 1 ? '1 día' : `${data.streak || 1} días`;
 
     let html = `
       <div class="recorrido-header-card">
-        <div class="recorrido-banner-info">
-          <div class="banner-title-group">
-            <span class="banner-badge">🧭 RECORRIDO PRINCIPAL</span>
-            <h2>Carrera de Ciberseguridad</h2>
-            <p>Aprende → Comprende → Practica → Evalúa → Domina</p>
+        <div class="banner-badge">🧭 RECORRIDO PRINCIPAL</div>
+        <h2 class="recorrido-title">Carrera de Ciberseguridad</h2>
+        <p class="recorrido-subtitle">Aprende → Comprende → Practica → Evalúa → Domina</p>
+
+        <div class="recorrido-stats-summary">
+          <div class="stat-box-circular">
+            <div class="mini-gauge-val">${progressPct}%</div>
+            <span class="stat-lbl">Progreso Total</span>
           </div>
-          <div class="recorrido-stats-summary">
-            <div class="stat-box">
-              <span class="stat-num">${progressPct}%</span>
-              <span class="stat-lbl">Progreso Total</span>
-            </div>
-            <div class="stat-box">
-              <span class="stat-num">${completedCount} / ${modules.length}</span>
-              <span class="stat-lbl">Módulos Listos</span>
-            </div>
-            <div class="stat-box">
-              <span class="stat-num">🔥 ${data.streak || 1} d</span>
-              <span class="stat-lbl">Racha Actual</span>
-            </div>
+          <div class="stat-box-flat">
+            <span class="stat-num">${completedCount} / ${modules.length}</span>
+            <span class="stat-lbl">Módulos Listos</span>
+          </div>
+          <div class="stat-box-flat">
+            <span class="stat-num">🔥 ${streakLabel}</span>
+            <span class="stat-lbl">Racha Actual</span>
           </div>
         </div>
-        <div class="progress-bar-container" style="margin-top:16px;">
-          <div class="progress-bar-fill" style="width:${progressPct}%;"></div>
+
+        <div class="progress-bar-container" style="margin-top:14px; height: 6px;">
+          <div class="progress-bar-fill cyan" style="width:${progressPct}%;"></div>
         </div>
       </div>
 
-      <div class="recorrido-path-container">
-        <div class="serpentine-path">
+      <div class="recorrido-circuit-flow">
     `;
 
-    // Group modules by stages
+    // Group modules by stage
     const stagesMap = {};
     modules.forEach(mod => {
       const stageId = mod.stage ?? 0;
@@ -156,48 +153,55 @@ class RecorridoEngine {
     });
 
     const stageTitles = {
-      0: 'Etapa 0: Fundamentos & Alfabetización Digital',
-      1: 'Etapa 1: Sistemas Operativos (Linux & Windows)',
-      2: 'Etapa 2: Redes & Telecomunicaciones',
-      3: 'Etapa 3: Arquitectura de Internet & Web',
-      4: 'Etapa 4: Programación Orientada a Ciberseguridad',
-      7: 'Etapa 7: Bastionado & Defensa en Profundidad',
-      11: 'Etapa 11: SOC, Análisis Forense & Laboratorios'
+      0: 'ETAPA 0  Fundamentos & Alfabetización Digital',
+      1: 'ETAPA 1  Sistemas Operativos (Linux & Windows)',
+      2: 'ETAPA 2  Redes & Telecomunicaciones',
+      3: 'ETAPA 3  Arquitectura de Internet & Web',
+      4: 'ETAPA 4  Programación Orientada a Ciberseguridad',
+      7: 'ETAPA 7  Bastionado & Defensa en Profundidad',
+      11: 'ETAPA 11  SOC, Análisis Forense & Laboratorios'
     };
 
-    let globalNodeIndex = 0;
+    let itemNumber = 0;
 
     Object.keys(stagesMap).sort((a,b) => Number(a) - Number(b)).forEach(stageKey => {
       const stageMods = stagesMap[stageKey];
-      const stageTitle = stageTitles[stageKey] || `Etapa ${stageKey}`;
+      const stageTitle = stageTitles[stageKey] || `ETAPA ${stageKey}`;
 
       html += `
-        <div class="path-stage-divider">
-          <span class="stage-divider-tag">⚡ ${stageTitle}</span>
+        <div class="stage-section-header">
+          <span class="stage-tag">⚡ ${stageTitle}</span>
+          <span class="stage-toggle-icon">⌄</span>
         </div>
       `;
 
       stageMods.forEach(mod => {
+        itemNumber++;
         const status = this.getNodeStatus(mod);
-        globalNodeIndex++;
-
-        // Calculate offset for serpentine curve (centered sinusoidal path)
-        const curveOffset = Math.sin(globalNodeIndex * 0.9) * 90; // px offset
+        const isLocked = status.code === 'locked';
 
         html += `
-          <div class="node-wrapper" style="transform: translateX(${curveOffset}px);">
-            <button class="path-node-btn ${status.class}" 
-                    data-module-id="${mod.id}" 
-                    onclick="window.CyberRecorrido.openLesson('${mod.id}')"
-                    ${status.code === 'locked' ? 'disabled' : ''}>
-              <span class="node-icon">${mod.icon}</span>
-              <span class="node-status-badge">${status.icon}</span>
-              <div class="node-pulse-ring"></div>
-            </button>
-            <div class="node-info-card">
-              <div class="node-title">${mod.title}</div>
-              <div class="node-meta">${mod.category} · ${mod.estimatedTime}</div>
-              <div class="node-status-tag ${status.code}">${status.label}</div>
+          <div class="circuit-node-row ${isLocked ? 'locked' : ''}">
+            <div class="circuit-node-connector">
+              <div class="circuit-node-circle ${status.code}">
+                <span class="node-icon">${mod.icon || '🛡️'}</span>
+                ${isLocked ? '<span class="node-lock-badge">🔒</span>' : ''}
+              </div>
+              <div class="circuit-line-down"></div>
+            </div>
+
+            <div class="circuit-card ${status.code}" 
+                 onclick="${isLocked ? '' : `window.CyberRecorrido.openLesson('${mod.id}')`}">
+              <div class="circuit-card-main">
+                <h3 class="circuit-card-title">${itemNumber}. ${this.escape(mod.title)}</h3>
+                <div class="circuit-card-meta">${this.escape(mod.category)} · ${mod.estimatedTime || '30 min'}</div>
+                <div class="circuit-card-status">
+                  <span class="tag ${status.code === 'available' ? 'green' : status.code === 'completed' || status.code === 'mastered' ? 'cyan' : 'purple'}">
+                    ${status.label} ${status.code === 'available' ? '●' : status.code === 'locked' ? '🔒' : '✓'}
+                  </span>
+                </div>
+              </div>
+              <button class="circuit-card-arrow" aria-label="Abrir módulo">›</button>
             </div>
           </div>
         `;
@@ -205,11 +209,14 @@ class RecorridoEngine {
     });
 
     html += `
-        </div>
       </div>
     `;
 
     container.innerHTML = html;
+  }
+
+  escape(str) {
+    return String(str || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
   /* ==========================================================================

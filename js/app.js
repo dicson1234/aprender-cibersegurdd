@@ -78,19 +78,21 @@ class CyberLabApp {
   }
 
   updateHeaderStats() {
-    const data = window.CyberStorage.data;
-    document.querySelectorAll('.stat-xp-val').forEach(el => el.textContent = data.xp.toLocaleString());
-    document.querySelectorAll('.stat-level-val').forEach(el => el.textContent = data.level);
-    document.querySelectorAll('.stat-streak-val').forEach(el => el.textContent = `${data.streak} d`);
+    const data = window.CyberStorage?.data || { xp: 0, level: 1, streak: 1 };
+    document.querySelectorAll('.stat-xp-val').forEach(el => el.textContent = (data.xp || 0).toLocaleString());
+    document.querySelectorAll('.stat-level-val').forEach(el => el.textContent = data.level || 1);
+    document.querySelectorAll('.stat-streak-val').forEach(el => el.textContent = `${data.streak || 1} d`);
 
     const account = window.CyberAccounts?.getActive();
-    if (account) {
-      const userBox = document.getElementById('header-user-profile-badge');
-      if (userBox) {
+    const userBox = document.getElementById('header-user-profile-badge');
+    if (userBox) {
+      if (account) {
         const avatarSrc = (account.avatar && (account.avatar.startsWith('data:') || account.avatar.startsWith('http')))
           ? `<img src="${account.avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;border:1px solid var(--accent-cyan)">`
-          : `<span style="font-size:1.1rem">${account.avatar || '👤'}</span>`;
-        userBox.innerHTML = `${avatarSrc} <span style="font-weight:700;font-size:0.85rem">${account.username}</span>`;
+          : `<span style="font-size:1.1rem">${account.avatar || '🛡️'}</span>`;
+        userBox.innerHTML = `${avatarSrc} <span style="font-weight:700;font-size:0.85rem;color:#ffffff">${account.username}</span> <span style="font-size:0.78rem;color:#ffc700;margin-left:4px;font-weight:700">🏆 ${(data.xp || 0).toLocaleString()}</span>`;
+      } else {
+        userBox.innerHTML = `<span style="font-size:1.1rem">👤</span> <span style="font-weight:700;font-size:0.85rem;color:var(--accent-cyan)">Ingresar</span>`;
       }
     }
   }

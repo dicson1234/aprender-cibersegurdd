@@ -60,11 +60,7 @@
   }
 
   function selectAccount(){
-    localStorage.removeItem('cyberlab_active_account_v1');
-    window.CyberAccounts.activeId=null;
-    window.CyberStorage.setActiveAccount(null);
-    const g=document.getElementById('accounts-gate');if(g)g.style.display='flex';
-    window.CyberAccounts.renderSelection();
+    window.CyberAccounts.logout();
   }
 
   function openEditor(a){

@@ -52,28 +52,19 @@ class AccountsManager {
   }
 
   ensureMigration(){
-    if(this.accounts.length){
-      if(!this.activeId||!this.accounts.some(a=>a.id===this.activeId)){
-        this.activeId=this.accounts[0].id;
-        localStorage.setItem(ACTIVE_ACCOUNT_KEY,this.activeId);
+    if(this.accounts.length && this.activeId){
+      if(!this.accounts.some(a=>a.id===this.activeId)){
+        this.activeId=null;
+        localStorage.removeItem(ACTIVE_ACCOUNT_KEY);
       }
       return;
     }
-
-    const legacy=localStorage.getItem('cyberlab_user_data_v1');
-    const account={
-      id:`user-${crypto.randomUUID()}`,
-      username:'Estudiante',email:'',pinHash:'',avatar:'🛡️',bio:'Estudiante de CyberLab',
-      createdAt:new Date().toISOString(),isCloud:false,privateProfile:true
-    };
-    this.accounts.push(account);
-    this.saveAccounts();
-    this.activeId=account.id;
-    localStorage.setItem(ACTIVE_ACCOUNT_KEY,account.id);
-    if(!legacy)localStorage.removeItem('cyberlab_user_data_v1');
   }
 
-  getActive(){return this.accounts.find(a=>a.id===this.activeId)||null;}
+  getActive(){
+    if(!this.activeId) return null;
+    return this.accounts.find(a=>a.id===this.activeId)||null;
+  }
 
   async hashPin(pin){
     if(!pin)return '';
@@ -82,13 +73,20 @@ class AccountsManager {
   }
 
   renderGate(){
-    if(this.getActive())return;
-    if(document.getElementById('accounts-gate'))return;
-    const gate=document.createElement('div');
-    gate.id='accounts-gate';
-    gate.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(5,8,15,.97);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);font-family:inherit;';
-    gate.innerHTML='<div id="accounts-card" class="account-gate-card"></div>';
-    document.body.appendChild(gate);
+    if(this.getActive()){
+      this.hideGate();
+      return;
+    }
+    let gate=document.getElementById('accounts-gate');
+    if(!gate){
+      gate=document.createElement('div');
+      gate.id='accounts-gate';
+      gate.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(5,8,15,.97);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);font-family:inherit;';
+      gate.innerHTML='<div id="accounts-card" class="account-gate-card"></div>';
+      document.body.appendChild(gate);
+    } else {
+      gate.style.display='flex';
+    }
     this.renderSelection();
   }
 
@@ -265,11 +263,18 @@ class AccountsManager {
   hideGate(){const gate=document.getElementById('accounts-gate');if(gate)gate.style.display='none';}
 
   async logout(){
-    this.activeId=null;this.cloudToken=null;
-    localStorage.removeItem(ACTIVE_ACCOUNT_KEY);localStorage.removeItem(CLOUD_TOKEN_KEY);
+    const token = this.cloudToken || this.getActive()?.token;
+    if(token){
+      fetch(`${this.getApiBase()}/auth/logout`,{method:'POST',headers:{'Authorization':`Bearer ${token}`}}).catch(()=>{});
+    }
+    this.activeId=null;
+    this.cloudToken=null;
+    localStorage.removeItem(ACTIVE_ACCOUNT_KEY);
+    localStorage.removeItem(CLOUD_TOKEN_KEY);
     window.CyberStorage?.setActiveAccount(null);
-    const gate=document.getElementById('accounts-gate');
-    if(gate){gate.style.display='flex';this.renderSelection();}
+    window.CyberApp?.updateHeaderStats?.();
+    window.dispatchEvent(new CustomEvent('cyberlab_account_changed',{detail:null}));
+    this.renderGate();
   }
 
   async updateActiveProfile({username,avatar,bio}={}){
