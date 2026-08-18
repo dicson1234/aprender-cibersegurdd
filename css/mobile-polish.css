@@ -612,3 +612,178 @@
   0% { transform: scale(1); opacity: 0.8; }
   100% { transform: scale(1.35); opacity: 0; }
 }
+
+/* Robot Thinking State */
+.cybertutor-robot-fab.emotion-thinking {
+  border-color: var(--accent-purple, #a371f7);
+  box-shadow: 0 0 20px rgba(163, 113, 247, 0.6);
+}
+.cybertutor-robot-fab.emotion-thinking .pupil {
+  animation: robot-pupil-orbit 0.8s infinite linear;
+}
+@keyframes robot-pupil-orbit {
+  0% { transform: translate(-2px, -2px); }
+  25% { transform: translate(2px, -2px); }
+  50% { transform: translate(2px, 2px); }
+  75% { transform: translate(-2px, 2px); }
+  100% { transform: translate(-2px, -2px); }
+}
+
+/* Robot Floating Thought Bubble ("Opiniones por su propia voluntad") */
+.robot-thought-bubble {
+  position: fixed;
+  bottom: 142px;
+  right: 18px;
+  max-width: 220px;
+  background: rgba(7, 16, 25, 0.95);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 18px rgba(0, 240, 255, 0.22);
+  border-radius: 16px 16px 2px 16px;
+  padding: 10px 14px;
+  color: #e6fdff;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  z-index: 10025;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  animation: thought-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.robot-thought-bubble.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px) scale(0.9);
+}
+.robot-thought-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  right: 14px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 8px solid rgba(0, 240, 255, 0.4);
+}
+.robot-thought-bubble .thought-close {
+  display: inline-block;
+  margin-left: 8px;
+  color: #89a0a6;
+  font-weight: bold;
+  font-size: 0.85rem;
+  padding: 0 4px;
+}
+.robot-thought-bubble .thought-close:hover {
+  color: #00f0ff;
+}
+@keyframes thought-pop {
+  0% { opacity: 0; transform: scale(0.7) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ==========================================================================
+   UNIVERSAL MOBILE UI SIMPLIFICATION & SPACING POLISH FOR ALL TABS
+   ========================================================================== */
+@media (max-width: 992px) {
+  /* Unified View Section Margins & Headers */
+  .view-section {
+    padding-bottom: 24px;
+  }
+  .view-section .page-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .view-section .page-subtitle {
+    font-size: 0.82rem;
+    margin-bottom: 14px;
+    color: var(--mobile-muted, #94a3b8);
+  }
+
+  /* Grid Layouts for Labs, Quizzes, Challenges, Resources, Notes, MITRE */
+  .grid-cards,
+  #labs-root .grid-cards,
+  #quizzes-root .grid-cards,
+  #challenges-root .grid-cards,
+  #notes-root .grid-cards,
+  #resources-root .grid-cards,
+  #glossary-root .grid-cards,
+  #tools-root .grid-cards,
+  #projects-root .grid-cards,
+  #roadmaps-root .grid-cards,
+  #cases-root .grid-cards,
+  #mitre-root .grid-cards {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+
+  /* Compact Cards across all sections */
+  .card,
+  .lab-card,
+  .quiz-card,
+  .challenge-card,
+  .note-card,
+  .resource-card,
+  .glossary-card,
+  .tool-card,
+  .project-card,
+  .mitre-card {
+    padding: 12px 14px !important;
+    border-radius: 16px !important;
+    background: rgba(15, 22, 32, 0.82) !important;
+    border: 1px solid rgba(0, 240, 255, 0.15) !important;
+  }
+
+  /* Titles inside cards */
+  .card-title,
+  .lab-title,
+  .quiz-title,
+  .challenge-title {
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  /* Buttons inside cards */
+  .btn-sm,
+  .card .btn,
+  .lab-card .btn,
+  .quiz-card .btn {
+    min-height: 40px !important;
+    font-size: 0.82rem !important;
+    padding: 8px 12px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Interactive Terminal Windows inside Labs */
+  .terminal-window {
+    border-radius: 12px !important;
+    margin-top: 10px !important;
+    border: 1px solid rgba(0, 240, 255, 0.25) !important;
+  }
+  .terminal-header {
+    padding: 6px 10px !important;
+    font-size: 0.75rem !important;
+  }
+  .terminal-body {
+    font-size: 0.78rem !important;
+    padding: 10px !important;
+    max-height: 220px !important;
+  }
+
+  /* Knowledge Map & Tree Adjustments */
+  #knowledge-map-root,
+  #learning-tree-root {
+    padding: 4px 0 !important;
+  }
+
+  /* Modals on Mobile */
+  .modal-card {
+    padding: 16px 14px calc(16px + env(safe-area-inset-bottom)) !important;
+  }
+}
