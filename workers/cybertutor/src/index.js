@@ -1,6 +1,9 @@
-// Valid Gemini Models (Google AI Studio Current Generation)
+// Valid Gemini Models
 const GEMINI_MODELS = [
-  'gemini-2.0-flash',
+  'gemini-3.1-flash-lite',
+  'gemini-flash-latest',
+  'gemini-3.7-flash',
+  'gemini-3.5-flash',
   'gemini-1.5-flash',
   'gemini-1.5-pro'
 ];
@@ -47,8 +50,11 @@ async function hashPassword(password, salt) {
 
 // --- Utilities ---
 function isOriginAllowed(origin) {
-  if (!origin) return false;
-  return /^https:\/\/([a-z0-9-]+\.)?dicson1234\.github\.io\/?$/i.test(origin) || origin.includes('localhost');
+  if (!origin) return true; // Permitir apps móviles native/Capacitor y peticiones directas
+  return /^https:\/\/([a-z0-9-]+\.)?dicson1234\.github\.io\/?$/i.test(origin) ||
+         origin.includes('localhost') ||
+         origin.includes('capacitor') ||
+         origin.startsWith('file://');
 }
 
 function getCorsHeaders(origin) {
@@ -199,9 +205,12 @@ async function callGemini(apiKey, payload) {
   let lastStatus = 502;
 
   for (const modelName of GEMINI_MODELS) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
-    
-    for (let attempt = 0; attempt < 2; attempt++) {
+    const urls = [
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent`
+    ];
+
+    for (const url of urls) {
       try {
         const response = await fetch(url, {
           method: 'POST',
@@ -216,19 +225,12 @@ async function callGemini(apiKey, payload) {
           if (answer) return { ok: true, answer, model: modelName };
         }
 
-        console.error(`Gemini model ${modelName} (attempt ${attempt + 1}) status ${response.status}:`, data);
-        lastStatus = response.status >= 500 ? 502 : response.status;
-        lastError = data?.error?.message || `HTTP ${response.status}`;
-
-        if (response.status === 503 || response.status === 429) {
-          await new Promise(r => setTimeout(r, 300));
-        } else {
-          break;
+        if (data?.error?.message) {
+          lastStatus = response.status >= 500 ? 502 : response.status;
+          lastError = `Model ${modelName} (${url.includes('/v1beta/') ? 'v1beta' : 'v1'}): ${data.error.message}`;
         }
       } catch (err) {
-        console.error(`Fetch error model ${modelName}:`, err);
         lastError = err.message;
-        await new Promise(r => setTimeout(r, 300));
       }
     }
   }
