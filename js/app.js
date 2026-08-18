@@ -57,6 +57,7 @@ class CyberLabApp {
 
   renderAllViews() {
     if (window.CyberDashboard) window.CyberDashboard.render();
+    if (window.CyberRecorrido) window.CyberRecorrido.renderPath();
     if (window.CyberKnowledgeMap) window.CyberKnowledgeMap.render();
     if (window.CyberLearningTree) window.CyberLearningTree.render();
     if (window.CyberLabs) window.CyberLabs.render();
@@ -98,6 +99,9 @@ class CyberLabApp {
     switch (viewName) {
       case 'dashboard':
         if (window.CyberDashboard) window.CyberDashboard.render();
+        break;
+      case 'recorrido':
+        if (window.CyberRecorrido) window.CyberRecorrido.renderPath();
         break;
       case 'map':
         if (window.CyberKnowledgeMap) window.CyberKnowledgeMap.render();
