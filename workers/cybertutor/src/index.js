@@ -1,8 +1,8 @@
+// Valid Gemini Models (Google AI Studio Current Generation)
 const GEMINI_MODELS = [
-  'gemini-3.1-flash-lite',
-  'gemini-flash-latest',
-  'gemini-3.7-flash',
-  'gemini-3.5-flash'
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro'
 ];
 
 const SYSTEM_PROMPT = `Eres CyberTutor, el tutor personal de ciberseguridad de CyberLab.
@@ -31,16 +31,30 @@ REGLAS DE CONVERSACIÓN Y DIAGNÓSTICO AUTOMÁTICO:
    - Para temas de hacking o auditoría, enfócalo en laboratorios autorizados, CTFs, máquinas propias y aprendizaje ético defensivo.
    - No inventes información.`;
 
-// In-Memory storage fallback for Cloudflare Workers when KV is not bound
-const MEMORY_USERS = new Map();
-const MEMORY_TOKENS = new Map();
-const MEMORY_PROGRESS = new Map();
+// --- Security & Cryptography ---
+async function hashPassword(password, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', enc.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']
+  );
+  const buffer = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: enc.encode(salt), iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    256
+  );
+  return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// --- Utilities ---
+function isOriginAllowed(origin) {
+  if (!origin) return false;
+  return /^https:\/\/([a-z0-9-]+\.)?dicson1234\.github\.io\/?$/i.test(origin) || origin.includes('localhost');
+}
 
 function getCorsHeaders(origin) {
-  const isAllowed = !origin || /^https:\/\/([a-z0-9-]+\.)?dicson1234\.github\.io\/?$/i.test(origin) || origin.includes('localhost');
-  const allowOrigin = origin || 'https://dicson1234.github.io';
+  const safeOrigin = isOriginAllowed(origin) ? origin : 'https://dicson1234.github.io';
   return {
-    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Origin': safeOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-User-Token',
     'Vary': 'Origin'
@@ -57,58 +71,77 @@ function jsonResponse(data, status = 200, origin = '') {
   });
 }
 
-// User & Auth Storage Utilities
-async function findUserByEmailOrUsername(env, identifier) {
-  const key = String(identifier || '').toLowerCase().trim();
-  if (!key) return null;
+// --- KV Storage Managers ---
+// Architecture:
+// user:id:{id} -> User JSON Object
+// user:email:{email} -> {id}
+// user:username:{username} -> {id}
+// token:{token} -> {id}
+// progress:{id} -> Progress JSON Object
 
-  if (env.CYBERLAB_KV) {
-    const user = await env.CYBERLAB_KV.get(`user:${key}`, { type: 'json' });
-    if (user) return user;
-  }
-  return MEMORY_USERS.get(key) || null;
+async function checkKV(env) {
+  if (!env.CYBERLAB_KV) throw new Error("CYBERLAB_KV no está configurado. Storage es obligatorio en producción.");
 }
 
-async function saveUser(env, userObj) {
-  const emailKey = String(userObj.email || '').toLowerCase().trim();
-  const usernameKey = String(userObj.username || '').toLowerCase().trim();
+async function findUserIdByIdentifier(env, identifier) {
+  const key = String(identifier || '').toLowerCase().trim();
+  if (!key) return null;
+  let id = await env.CYBERLAB_KV.get(`user:email:${key}`);
+  if (!id) id = await env.CYBERLAB_KV.get(`user:username:${key}`);
+  return id || null;
+}
 
-  if (env.CYBERLAB_KV) {
-    if (emailKey) await env.CYBERLAB_KV.put(`user:${emailKey}`, JSON.stringify(userObj));
-    if (usernameKey) await env.CYBERLAB_KV.put(`user:${usernameKey}`, JSON.stringify(userObj));
-    if (userObj.token) await env.CYBERLAB_KV.put(`token:${userObj.token}`, JSON.stringify(userObj));
-  }
-
-  if (emailKey) MEMORY_USERS.set(emailKey, userObj);
-  if (usernameKey) MEMORY_USERS.set(usernameKey, userObj);
-  if (userObj.token) MEMORY_TOKENS.set(userObj.token, userObj);
+async function getUserById(env, id) {
+  if (!id) return null;
+  return await env.CYBERLAB_KV.get(`user:id:${id}`, { type: 'json' });
 }
 
 async function getUserByToken(env, token) {
   if (!token) return null;
-  if (env.CYBERLAB_KV) {
-    const user = await env.CYBERLAB_KV.get(`token:${token}`, { type: 'json' });
-    if (user) return user;
-  }
-  return MEMORY_TOKENS.get(token) || null;
+  const userId = await env.CYBERLAB_KV.get(`token:${token}`);
+  if (!userId) return null;
+  return await getUserById(env, userId);
+}
+
+async function saveUser(env, userObj) {
+  const userId = userObj.id;
+  const email = String(userObj.email || '').toLowerCase().trim();
+  const username = String(userObj.username || '').toLowerCase().trim();
+
+  // Guardar objeto principal del usuario
+  await env.CYBERLAB_KV.put(`user:id:${userId}`, JSON.stringify(userObj));
+
+  // Guardar índices (Punteros) para evitar duplicación y colisiones
+  if (email) await env.CYBERLAB_KV.put(`user:email:${email}`, userId);
+  if (username) await env.CYBERLAB_KV.put(`user:username:${username}`, userId);
+  if (userObj.token) await env.CYBERLAB_KV.put(`token:${userObj.token}`, userId);
+}
+
+// Limpiar punteros antiguos al actualizar el perfil para evitar claves huérfanas
+async function updateProfilePointers(env, oldUser, newUser) {
+  const oldEmail = String(oldUser.email || '').toLowerCase().trim();
+  const newEmail = String(newUser.email || '').toLowerCase().trim();
+  const oldUsern = String(oldUser.username || '').toLowerCase().trim();
+  const newUsern = String(newUser.username || '').toLowerCase().trim();
+
+  if (oldEmail && oldEmail !== newEmail) await env.CYBERLAB_KV.delete(`user:email:${oldEmail}`);
+  if (oldUsern && oldUsern !== newUsern) await env.CYBERLAB_KV.delete(`user:username:${oldUsern}`);
 }
 
 async function getUserProgress(env, userId) {
   if (!userId) return null;
-  if (env.CYBERLAB_KV) {
-    return await env.CYBERLAB_KV.get(`progress:${userId}`, { type: 'json' }) || null;
-  }
-  return MEMORY_PROGRESS.get(userId) || null;
+  return await env.CYBERLAB_KV.get(`progress:${userId}`, { type: 'json' }) || null;
 }
 
 async function saveUserProgress(env, userId, progressObj) {
-  if (!userId) return;
-  if (env.CYBERLAB_KV) {
-    await env.CYBERLAB_KV.put(`progress:${userId}`, JSON.stringify(progressObj));
-  }
-  MEMORY_PROGRESS.set(userId, progressObj);
+  if (!userId || !progressObj) return;
+  // Size protection (Max ~500KB) para evitar ataques de inyección de carga pesada en KV
+  const dataString = JSON.stringify(progressObj);
+  if (dataString.length > 512 * 1024) throw new Error("Carga útil de progreso excede el tamaño máximo permitido.");
+  await env.CYBERLAB_KV.put(`progress:${userId}`, dataString);
 }
 
+// --- Gemini Helpers ---
 function formatStudentContext(student = {}) {
   return JSON.stringify({
     level: student.level ?? 1,
@@ -132,20 +165,14 @@ function buildGeminiContents(rawHistory, currentMessage) {
       const role = (item.role === 'assistant' || item.role === 'model' || item.role === 'tutor') ? 'model' : 'user';
       const text = typeof item.content === 'string' ? item.content : (typeof item.text === 'string' ? item.text : '');
       if (text.trim()) {
-        turns.push({
-          role,
-          parts: [{ text: text.trim() }]
-        });
+        turns.push({ role, parts: [{ text: text.trim() }] });
       }
     }
   }
 
   const lastTurn = turns[turns.length - 1];
   if (!lastTurn || lastTurn.role !== 'user' || lastTurn.parts[0]?.text !== currentMessage.trim()) {
-    turns.push({
-      role: 'user',
-      parts: [{ text: currentMessage.trim() }]
-    });
+    turns.push({ role: 'user', parts: [{ text: currentMessage.trim() }] });
   }
 
   const validContents = [];
@@ -178,24 +205,15 @@ async function callGemini(apiKey, payload) {
       try {
         const response = await fetch(url, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey
-          },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
           body: JSON.stringify(payload)
         });
 
         const data = await response.json().catch(() => null);
 
         if (response.ok && data?.candidates?.[0]?.content?.parts) {
-          const answer = data.candidates[0].content.parts
-            .map(p => p.text || '')
-            .join('')
-            .trim();
-
-          if (answer) {
-            return { ok: true, answer, model: modelName };
-          }
+          const answer = data.candidates[0].content.parts.map(p => p.text || '').join('').trim();
+          if (answer) return { ok: true, answer, model: modelName };
         }
 
         console.error(`Gemini model ${modelName} (attempt ${attempt + 1}) status ${response.status}:`, data);
@@ -228,13 +246,15 @@ export default {
       return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
     }
 
+    try { await checkKV(env); } catch(e) { return jsonResponse({ error: e.message }, 500, origin); }
+
     // Health check
     if (pathname === '/' && request.method === 'GET') {
       return jsonResponse({
         status: 'ok',
         service: 'CyberLab Worker Backend',
-        version: '2.0.0',
-        features: ['user-auth', 'profile-management', 'cloud-sync', 'cybertutor-ai']
+        version: '3.0.0', // Updated version signaling the security & architecture patch
+        features: ['secure-auth', 'kv-pointers', 'cloud-sync', 'cybertutor-ai']
       }, 200, origin);
     }
 
@@ -252,19 +272,22 @@ export default {
       if (!username || username.length < 2) return jsonResponse({ error: 'El nombre de usuario debe tener al menos 2 caracteres.' }, 400, origin);
       if (!password || password.length < 4) return jsonResponse({ error: 'La contraseña o PIN debe tener al menos 4 caracteres.' }, 400, origin);
 
-      const existing = await findUserByEmailOrUsername(env, username) || await findUserByEmailOrUsername(env, email);
-      if (existing) {
+      const existingId = await findUserIdByIdentifier(env, username) || await findUserIdByIdentifier(env, email);
+      if (existingId) {
         return jsonResponse({ error: 'El nombre de usuario o correo ya está registrado.' }, 409, origin);
       }
 
       const userId = `user_${crypto.randomUUID()}`;
       const token = `cl_token_${crypto.randomUUID().replace(/-/g, '')}`;
+      const salt = crypto.randomUUID();
+      const hashedPassword = await hashPassword(password, salt);
 
       const newUser = {
         id: userId,
         username,
         email,
-        passwordHash: password, // Simple secure hash in worker context
+        passwordHash: hashedPassword,
+        salt,
         avatar,
         bio: bio || 'Estudiante de ciberseguridad en CyberLab',
         createdAt: new Date().toISOString(),
@@ -273,7 +296,6 @@ export default {
 
       await saveUser(env, newUser);
 
-      // Return clean user object (exclude sensitive hash)
       const publicUser = { id: userId, username, email, avatar, bio: newUser.bio, createdAt: newUser.createdAt, token };
       return jsonResponse({ ok: true, message: 'Usuario registrado exitosamente', user: publicUser, token }, 201, origin);
     }
@@ -288,21 +310,54 @@ export default {
 
       if (!identifier) return jsonResponse({ error: 'Ingresa tu usuario o correo.' }, 400, origin);
 
-      const user = await findUserByEmailOrUsername(env, identifier);
-      if (!user) return jsonResponse({ error: 'Usuario no encontrado.' }, 404, origin);
+      const userId = await findUserIdByIdentifier(env, identifier);
+      if (!userId) return jsonResponse({ error: 'Usuario no encontrado.' }, 404, origin);
 
-      if (user.passwordHash && user.passwordHash !== password) {
-        return jsonResponse({ error: 'Contraseña o PIN incorrecto.' }, 401, origin);
+      const user = await getUserById(env, userId);
+      if (!user) return jsonResponse({ error: 'Datos de usuario corrompidos.' }, 500, origin);
+
+      // Verify password
+      if (user.passwordHash && user.salt) {
+        const attemptHash = await hashPassword(password, user.salt);
+        if (attemptHash !== user.passwordHash) {
+          return jsonResponse({ error: 'Contraseña o PIN incorrecto.' }, 401, origin);
+        }
+      } else if (user.passwordHash && !user.salt) {
+        // Fallback migratorio: contraseñas heredadas (plain text viejo)
+        if (user.passwordHash !== password) return jsonResponse({ error: 'Contraseña o PIN incorrecto.' }, 401, origin);
+        // Actualizamos automáticamente la seguridad al nuevo esquema de hashes
+        user.salt = crypto.randomUUID();
+        user.passwordHash = await hashPassword(password, user.salt);
       }
 
-      // Refresh token if needed
-      if (!user.token) user.token = `cl_token_${crypto.randomUUID().replace(/-/g, '')}`;
+      // Refresh token if missing
+      if (!user.token) {
+        user.token = `cl_token_${crypto.randomUUID().replace(/-/g, '')}`;
+      }
       await saveUser(env, user);
 
       const progress = await getUserProgress(env, user.id);
       const publicUser = { id: user.id, username: user.username, email: user.email, avatar: user.avatar, bio: user.bio, createdAt: user.createdAt, token: user.token };
 
       return jsonResponse({ ok: true, message: 'Sesión iniciada', user: publicUser, progress, token: user.token }, 200, origin);
+    }
+
+    // AUTH API: Logout / Revoke Token
+    if (pathname === '/api/auth/logout' && request.method === 'POST') {
+       const authHeader = request.headers.get('Authorization') || request.headers.get('X-User-Token') || '';
+       const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+       if (token) {
+         const userId = await env.CYBERLAB_KV.get(`token:${token}`);
+         if (userId) {
+           await env.CYBERLAB_KV.delete(`token:${token}`);
+           const user = await getUserById(env, userId);
+           if (user && user.token === token) {
+             user.token = null;
+             await saveUser(env, user);
+           }
+         }
+       }
+       return jsonResponse({ ok: true, message: 'Sesión cerrada exitosamente en la nube' }, 200, origin);
     }
 
     // USER PROFILE API: Get & Update Profile
@@ -322,10 +377,14 @@ export default {
         let body;
         try { body = await request.json(); } catch { return jsonResponse({ error: 'JSON inválido' }, 400, origin); }
 
+        const oldUser = JSON.parse(JSON.stringify(user));
+
         if (body.username && body.username.trim()) user.username = body.username.trim().slice(0, 24);
         if (body.bio !== undefined) user.bio = String(body.bio).slice(0, 200);
         if (body.avatar !== undefined) user.avatar = String(body.avatar);
 
+        // Actualizamos punteros si el username/email cambió
+        await updateProfilePointers(env, oldUser, user);
         await saveUser(env, user);
 
         const publicUser = { id: user.id, username: user.username, email: user.email, avatar: user.avatar, bio: user.bio, createdAt: user.createdAt };
@@ -345,7 +404,11 @@ export default {
       try { body = await request.json(); } catch { return jsonResponse({ error: 'JSON inválido' }, 400, origin); }
 
       const progressData = body.progress || body;
-      await saveUserProgress(env, user.id, progressData);
+      try {
+        await saveUserProgress(env, user.id, progressData);
+      } catch (err) {
+        return jsonResponse({ error: err.message }, 413, origin); // Payload Too Large
+      }
 
       return jsonResponse({ ok: true, message: 'Progreso sincronizado en la nube', syncedAt: new Date().toISOString() }, 200, origin);
     }
@@ -369,6 +432,11 @@ export default {
 
       if (request.method !== 'POST') {
         return jsonResponse({ error: 'Método no permitido. Utiliza POST.' }, 405, origin);
+      }
+
+      // SEGURIDAD CRÍTICA: Validación de Origen Obligatoria para proteger cuota de IA
+      if (!isOriginAllowed(origin)) {
+        return jsonResponse({ error: 'Acceso denegado a la API de IA (CORS / Origen no autorizado).' }, 403, origin);
       }
 
       if (!env.GEMINI_API_KEY) {
