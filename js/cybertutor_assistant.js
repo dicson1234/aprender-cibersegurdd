@@ -51,7 +51,10 @@ class CyberTutorAssistant {
       const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'text',message:msg,history:this.history.slice(-10),student:studentContext})});
       const data=await response.json().catch(()=>({}));
       if(!response.ok)throw new Error(data.error||`HTTP ${response.status}`);
-      const answer=data.answer||'No recibí una respuesta válida.';
+      let answer=data.answer||'No recibí una respuesta válida.';
+      if(window.CyberTutor?.processXpRewards) {
+        answer=window.CyberTutor.processXpRewards(answer);
+      }
       if(typingBubble)typingBubble.innerHTML=window.CyberTutor?.parseMarkdown?.(answer)||this.escape(answer);
       this.history.push({role:'user',content:msg},{role:'model',content:answer});
     }catch(e){

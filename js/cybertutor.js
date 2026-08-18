@@ -187,6 +187,21 @@ class CyberTutorEngine {
     };
   }
 
+  processXpRewards(text) {
+    if (!text) return '';
+    let cleanText = String(text);
+    const xpRegex = /\[GRANT_XP:(\d+):([^\]]+)\]/gi;
+    let match;
+    while ((match = xpRegex.exec(text)) !== null) {
+      const amount = parseInt(match[1], 10);
+      const reason = match[2].trim();
+      if (amount > 0 && amount <= 100 && window.CyberGamification) {
+        window.CyberGamification.addXP(amount, `CyberTutor: ${reason}`, `cybertutor_ai_${Date.now()}_${amount}`);
+      }
+    }
+    return cleanText.replace(xpRegex, '').trim();
+  }
+
   async sendUserMessage(){
     const i=document.getElementById('tutor-user-input');
     if(!i||this.busy)return;
@@ -232,7 +247,8 @@ class CyberTutorEngine {
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
 
-      const answer = d.answer || 'No recibí una respuesta válida.';
+      let answer = d.answer || 'No recibí una respuesta válida.';
+      answer = this.processXpRewards(answer);
 
       // Replace typing bubble with actual parsed answer
       if (typingBubble) {

@@ -28,20 +28,52 @@
 
   body:has(.cybertutor-drawer-panel.open){overflow:hidden!important;}
   body:has(.cybertutor-drawer-panel.open)::after{content:'';position:fixed;inset:0;z-index:10040;background:rgba(2,5,8,.80);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);pointer-events:auto;}
-  .cybertutor-drawer-panel{z-index:10050!important;background:#071019!important;background-color:#071019!important;opacity:1!important;isolation:isolate;border-left:1px solid rgba(78,223,219,.18)!important;}
+  .cybertutor-drawer-panel{z-index:10050!important;background:#071019!important;background-color:#071019!important;opacity:1!important;isolation:isolate;border-left:1px solid rgba(78,223,219,.18)!important;height:100dvh!important;max-height:100dvh!important;}
   .cybertutor-drawer-panel::before{content:'';position:absolute;inset:0;background:#071019;z-index:-1;pointer-events:none;}
   .cybertutor-drawer-panel .drawer-header,.cybertutor-drawer-panel .drawer-context-strip,.cybertutor-drawer-panel .drawer-messages-body,.cybertutor-drawer-panel .drawer-quick-prompts,.cybertutor-drawer-panel .drawer-input-bar{position:relative;z-index:1;}
   .cybertutor-drawer-panel .drawer-header{background:#0d1a22!important;color:#f5fbfb;}
   .cybertutor-drawer-panel .drawer-context-strip{background:#09141c!important;}
-  .cybertutor-drawer-panel .drawer-messages-body{background:#071019!important;}
-  .cybertutor-drawer-panel .drawer-quick-prompts{background:#0a151d!important;}
+  .cybertutor-drawer-panel .drawer-messages-body{background:#071019!important;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .cybertutor-drawer-panel .drawer-quick-prompts{background:#0a151d!important;display:flex;gap:6px;overflow-x:auto;padding:8px 10px;-webkit-overflow-scrolling:touch;}
+  .cybertutor-drawer-panel .quick-chip{flex:0 0 auto;white-space:nowrap;}
   .cybertutor-drawer-panel .drawer-input-bar{background:#0d1a22!important;}
   .cybertutor-drawer-panel .drawer-close-btn{min-width:44px;min-height:44px;display:inline-grid;place-items:center;border-radius:14px;color:#d9f7f4;background:rgba(255,255,255,.04);}
-  .cybertutor-drawer-panel .chat-bubble.tutor{background:#16282e!important;color:#f5fbfb!important;border:1px solid rgba(111,231,221,.22)!important;}
-  .cybertutor-drawer-panel .chat-bubble.user{color:#fff!important;}
+  .cybertutor-drawer-panel .chat-bubble.tutor{background:#16282e!important;color:#f5fbfb!important;border:1px solid rgba(111,231,221,.22)!important;word-break:break-word;overflow-wrap:anywhere;}
+  .cybertutor-drawer-panel .chat-bubble.user{color:#fff!important;word-break:break-word;overflow-wrap:anywhere;}
   .cybertutor-drawer-panel .drawer-input-bar .chat-input{background:#071019!important;color:#f8ffff!important;caret-color:#7ef4ee;}
   .cybertutor-drawer-panel .drawer-input-bar .chat-input::placeholder{color:#89a0a6;}
   .cybertutor-drawer-panel .drawer-input-bar .btn{flex:0 0 auto;min-width:92px;}
+
+  /* Prevent code block & long text overflow in mobile chat */
+  .chat-bubble pre {
+    max-width: 100% !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-x: auto !important;
+    font-size: 0.8rem !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+    background: #060b11 !important;
+  }
+  .chat-bubble code {
+    word-break: break-word !important;
+    font-size: 0.82rem !important;
+  }
+  .chat-bubble p, .chat-bubble li {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  /* Main CyberTutor View on Mobile */
+  .tutor-container {
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    gap: 14px !important;
+  }
+  .tutor-chat-window {
+    min-height: 420px;
+    max-height: 65vh;
+  }
 }
 
 @media (max-width:380px){
