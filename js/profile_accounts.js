@@ -1,84 +1,60 @@
-/* Active user profile UI with Cloud Backend Sync & Profile Photo support */
+/* Active user profile UI with reliable Cloud profile sync */
 (function(){
-  const esc=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
-  const AVATAR_PRESETS = ['🤖', '🛡️', '💻', '⚡', '🦅', '🥷', '🦊', '🚀'];
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const avatarSource=v=>typeof v==='string'&&(/^data:image\/(jpeg|jpg|png|webp);base64,/i.test(v)||v.startsWith('https://'));
+  const AVATAR_PRESETS=['🤖','🛡️','💻','⚡','🦅','🥷','🦊','🚀'];
 
   async function importFile(input){
     const file=input.files?.[0];if(!file)return;
-    try{window.CyberStorage.importBackup(await file.text());}finally{input.value='';}
+    try{await window.CyberStorage.importBackup(await file.text());}finally{input.value='';}
+  }
+
+  function avatarHtml(a,size=96){
+    const av=avatarSource(a.avatar)?a.avatar:null;
+    return av
+      ? `<img class="profile-avatar-img" src="${esc(av)}" alt="Foto de ${esc(a.username)}" loading="lazy" style="width:${size}px;height:${size}px">`
+      : `<div class="profile-avatar-fallback" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.42)}px">${esc(a.avatar||'👤')}</div>`;
   }
 
   function render(){
-    const c=document.getElementById('profile-root'), a=window.CyberAccounts?.getActive(), d=window.CyberStorage?.data;
+    const c=document.getElementById('profile-root'),a=window.CyberAccounts?.getActive(),d=window.CyberStorage?.data;
     if(!c||!a||!d)return;
     const ach=window.CyberData?.achievements||[];
 
-    const avatarHtml = (a.avatar && (a.avatar.startsWith('data:') || a.avatar.startsWith('http')))
-      ? `<img src="${a.avatar}" alt="Foto de ${esc(a.username)}" style="width:96px;height:96px;object-fit:cover;border-radius:50%;border:3px solid var(--accent-cyan);box-shadow:0 0 20px rgba(0,240,255,0.3)">`
-      : `<div style="width:96px;height:96px;border-radius:50%;display:grid;place-items:center;font-size:3.5rem;background:var(--bg-surface);border:3px solid var(--accent-cyan);box-shadow:0 0 20px rgba(0,240,255,0.3)">${a.avatar || '👤'}</div>`;
-
     c.innerHTML=`
-    <div class="card" style="margin-bottom:20px">
-      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-        ${avatarHtml}
-        <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <h2 style="margin:0">${esc(a.username)}</h2>
-            ${a.isCloud ? '<span class="tag green">🌐 Cuenta Nube (Backend Worker)</span>' : '<span class="tag yellow">💻 Perfil Local</span>'}
-          </div>
-          <p style="color:var(--text-muted);margin:6px 0 10px">${esc(a.bio||'Estudiante de ciberseguridad en CyberLab')}</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <span class="tag cyan">Nivel ${d.level}</span>
-            <span class="tag purple">${d.xp.toLocaleString()} XP</span>
-            <span class="tag yellow">🔥 ${d.streak} días de racha</span>
+      <div class="profile-hero-card card">
+        <div class="profile-hero-main">
+          <div class="profile-avatar-wrap">${avatarHtml(a,96)}</div>
+          <div class="profile-identity">
+            <div class="profile-title-row"><h2>${esc(a.username)}</h2><span class="tag ${a.isCloud?'green':'yellow'}">${a.isCloud?'🌐 Cuenta Nube':'💻 Perfil Local'}</span></div>
+            <p class="profile-bio">${esc(a.bio||'Estudiante de ciberseguridad en CyberLab')}</p>
+            <div class="profile-stats"><span class="tag cyan">Nivel ${d.level}</span><span class="tag purple">${d.xp.toLocaleString()} XP</span><span class="tag yellow">🔥 ${d.streak} días</span></div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button id="edit-account" class="btn btn-secondary">✏️ Editar Perfil & Foto</button>
-          ${a.isCloud ? '<button id="sync-cloud-btn" class="btn btn-secondary">🔄 Sincronizar Nube</button>' : ''}
-          <button id="switch-account" class="btn btn-secondary">👥 Cambiar Usuario</button>
-          <button id="logout-account" class="btn btn-primary">🚪 Salir</button>
+        <div class="profile-actions">
+          <button id="edit-account" class="btn btn-primary">✏️ Editar perfil</button>
+          ${a.isCloud?'<button id="sync-cloud-btn" class="btn btn-secondary">🔄 Sincronizar</button>':''}
+          <button id="switch-account" class="btn btn-secondary">👥 Cambiar</button>
+          <button id="logout-account" class="btn btn-danger">🚪 Salir</button>
         </div>
       </div>
-    </div>
 
-    <div class="grid-cards">
-      <div class="card">
-        <h3>🎯 Objetivos de Carrera</h3>
-        <p><strong>Principal:</strong> ${esc(d.primaryObjective)}</p>
-        <p><strong>Secundario:</strong> ${esc(d.secondaryObjective)}</p>
+      <div class="grid-cards profile-grid">
+        <div class="card"><h3>🎯 Objetivos</h3><p><strong>Principal:</strong> ${esc(d.primaryObjective)}</p><p><strong>Secundario:</strong> ${esc(d.secondaryObjective)}</p></div>
+        <div class="card"><h3>💾 Respaldo</h3><p class="profile-muted">${a.isCloud?'Tu perfil y progreso se sincronizan con la nube.':'Este perfil y su progreso viven en este navegador.'}</p><div class="profile-buttons"><button class="btn btn-primary" id="export-backup">📥 Exportar</button><button class="btn btn-secondary" id="import-backup">📤 Importar</button><input id="import-file-input" type="file" accept="application/json" hidden></div></div>
       </div>
-      <div class="card">
-        <h3>💾 Copia de Seguridad & Nube</h3>
-        <p style="color:var(--text-muted)">Progreso de ${esc(a.username)}. ${a.isCloud ? 'Tus datos se respaldan en la Nube (Cloudflare Worker).' : 'Perfil guardado en este navegador.'}</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="CyberStorage.exportBackup()">📥 Exportar JSON</button>
-          <button class="btn btn-secondary" onclick="document.getElementById('import-file-input').click()">📤 Importar JSON</button>
-          <input id="import-file-input" type="file" accept="application/json" style="display:none">
-        </div>
-      </div>
-    </div>
 
-    <div class="card" style="margin-top:20px">
-      <h3>🏆 Logros (${d.unlockedAchievements.length} / ${ach.length})</h3>
-      <div class="grid-cards">${ach.map(x=>{
-        const ok=d.unlockedAchievements.includes(x.id);
-        return `<div class="card" style="opacity:${ok?'1':'.4'}"><div style="font-size:2rem">${esc(x.icon)}</div><strong>${esc(x.name)}</strong><div style="font-size:.8rem;color:var(--text-muted)">${esc(x.description)}</div></div>`;
-      }).join('')}</div>
-    </div>`;
+      <div class="card profile-achievements"><h3>🏆 Logros (${d.unlockedAchievements.length} / ${ach.length})</h3><div class="grid-cards">${ach.map(x=>{const ok=d.unlockedAchievements.includes(x.id);return `<div class="card achievement-card" style="opacity:${ok?'1':'.42'}"><div class="achievement-icon">${esc(x.icon)}</div><strong>${esc(x.name)}</strong><div class="profile-muted">${esc(x.description)}</div></div>`;}).join('')}</div></div>`;
 
     c.querySelector('#import-file-input').onchange=e=>importFile(e.target);
+    c.querySelector('#export-backup').onclick=()=>window.CyberStorage.exportBackup();
+    c.querySelector('#import-backup').onclick=()=>c.querySelector('#import-file-input').click();
     c.querySelector('#edit-account').onclick=()=>openEditor(a);
-    if(c.querySelector('#sync-cloud-btn')) {
-      c.querySelector('#sync-cloud-btn').onclick=async ()=>{
-        c.querySelector('#sync-cloud-btn').textContent = '⌛ Sincronizando...';
-        await window.CyberAccounts.syncCloudProgress();
-        setTimeout(()=>{
-          c.querySelector('#sync-cloud-btn').textContent = '✅ Sincronizado!';
-          setTimeout(()=>c.querySelector('#sync-cloud-btn').textContent = '🔄 Sincronizar Nube', 2000);
-        }, 500);
-      };
-    }
+    if(c.querySelector('#sync-cloud-btn'))c.querySelector('#sync-cloud-btn').onclick=async()=>{
+      const btn=c.querySelector('#sync-cloud-btn');btn.disabled=true;btn.textContent='⌛ Sincronizando…';
+      const ok=await window.CyberAccounts.syncCloudProgress();btn.textContent=ok?'✅ Sincronizado':'⚠️ Reintentar';
+      setTimeout(()=>{btn.textContent='🔄 Sincronizar';btn.disabled=false;},1800);
+    };
     c.querySelector('#switch-account').onclick=()=>selectAccount();
     c.querySelector('#logout-account').onclick=()=>window.CyberAccounts.logout();
   }
@@ -87,86 +63,50 @@
     localStorage.removeItem('cyberlab_active_account_v1');
     window.CyberAccounts.activeId=null;
     window.CyberStorage.setActiveAccount(null);
-    const g=document.getElementById('accounts-gate');
-    if(g)g.style.display='flex';
+    const g=document.getElementById('accounts-gate');if(g)g.style.display='flex';
     window.CyberAccounts.renderSelection();
   }
 
   function openEditor(a){
     const old=document.getElementById('profile-editor-modal');if(old)old.remove();
-    const m=document.createElement('div');
-    m.id='profile-editor-modal';
-    m.className='modal-overlay active';
-    let currentAvatar = a.avatar || '🛡️';
-
-    m.innerHTML=`
-      <div class="modal-card" style="max-width:500px">
-        <button class="modal-close" id="close">✕</button>
-        <h3>✏️ Editar perfil & foto</h3>
-        
-        <label style="display:block;margin-top:10px">Nombre de usuario</label>
-        <input id="edit-name" class="chat-input" maxlength="24" style="width:100%;margin:4px 0 12px" value="${esc(a.username)}">
-        
-        <label style="display:block">Biografía</label>
-        <textarea id="edit-bio" class="chat-input" maxlength="180" rows="3" style="width:100%;margin:4px 0 12px">${esc(a.bio||'')}</textarea>
-        
-        <label style="display:block;margin-bottom:6px">Foto de perfil / Avatar</label>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-          <div id="modal-avatar-preview" style="width:72px;height:72px;border-radius:50%;background:var(--bg-surface);border:2px solid var(--accent-cyan);display:grid;place-items:center;font-size:2.5rem;overflow:hidden">
-            ${currentAvatar.startsWith('data:') || currentAvatar.startsWith('http') ? `<img src="${currentAvatar}" style="width:100%;height:100%;object-fit:cover">` : currentAvatar}
-          </div>
-          <div style="flex:1">
-            <input id="edit-avatar-file" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
-            <button type="button" class="btn btn-secondary" style="font-size:.8rem;padding:6px 12px;margin-bottom:8px" onclick="document.getElementById('edit-avatar-file').click()">📸 Subir foto propia</button>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              ${AVATAR_PRESETS.map(emoji => `<button type="button" class="btn-avatar-preset-edit" style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:8px;font-size:1.2rem;padding:4px 8px;cursor:pointer">${emoji}</button>`).join('')}
-            </div>
-          </div>
-        </div>
-
-        <div style="display:flex;justify-content:flex-end;gap:10px">
-          <button id="cancel" class="btn btn-secondary">Cancelar</button>
-          <button id="save" class="btn btn-primary">Guardar Cambios</button>
-        </div>
-      </div>`;
-
+    const m=document.createElement('div');m.id='profile-editor-modal';m.className='modal-overlay active';
+    let currentAvatar=a.avatar||'🛡️';
+    m.innerHTML=`<div class="modal-card profile-editor-card">
+      <button class="modal-close" id="close" aria-label="Cerrar">✕</button>
+      <div class="profile-editor-head"><div class="profile-editor-avatar" id="modal-avatar-preview"></div><div><h3>Editar perfil</h3><p class="profile-muted">Tu foto se guarda localmente y, en cuentas nube, también en el servidor.</p></div></div>
+      <label>Nombre de usuario</label><input id="edit-name" class="chat-input" maxlength="24" value="${esc(a.username)}">
+      <label>Biografía</label><textarea id="edit-bio" class="chat-input" maxlength="180" rows="3">${esc(a.bio||'')}</textarea>
+      <label>Foto de perfil / avatar</label>
+      <div class="profile-avatar-editor"><input id="edit-avatar-file" type="file" accept="image/jpeg,image/png,image/webp" hidden><button id="pick-edit-photo" type="button" class="btn btn-secondary">📸 Subir foto</button><div class="avatar-presets editor-presets">${AVATAR_PRESETS.map(e=>`<button type="button" class="btn-avatar-preset-edit">${e}</button>`).join('')}</div></div>
+      <div class="profile-editor-footer"><button id="cancel" class="btn btn-secondary">Cancelar</button><button id="save" class="btn btn-primary">Guardar cambios</button></div>
+      <div id="profile-save-status" class="account-status"></div>
+    </div>`;
     document.body.appendChild(m);
 
-    m.querySelector('#edit-avatar-file').onchange = async e => {
-      if (e.target.files[0]) {
-        currentAvatar = await window.CyberAccounts.compressImage(e.target.files[0]);
-        m.querySelector('#modal-avatar-preview').innerHTML = `<img src="${currentAvatar}" style="width:100%;height:100%;object-fit:cover">`;
+    const preview=m.querySelector('#modal-avatar-preview');
+    const drawPreview=()=>{preview.innerHTML=avatarSource(currentAvatar)?`<img src="${esc(currentAvatar)}" alt="Vista previa">`:`<span>${esc(currentAvatar||'👤')}</span>`;};
+    drawPreview();
+
+    m.querySelector('#pick-edit-photo').onclick=()=>m.querySelector('#edit-avatar-file').click();
+    m.querySelector('#edit-avatar-file').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{currentAvatar=await window.CyberAccounts.compressImage(file);drawPreview();}catch(err){alert(err.message);}};
+    m.querySelectorAll('.btn-avatar-preset-edit').forEach(btn=>btn.onclick=()=>{currentAvatar=btn.textContent;drawPreview();});
+    m.querySelector('#close').onclick=m.querySelector('#cancel').onclick=()=>m.remove();
+    m.querySelector('#save').onclick=async()=>{
+      const status=m.querySelector('#profile-save-status');const saveBtn=m.querySelector('#save');
+      const name=m.querySelector('#edit-name').value.trim();if(!name)return alert('Escribe un nombre de usuario.');
+      saveBtn.disabled=true;saveBtn.textContent='Guardando…';if(status)status.textContent='';
+      try{
+        await window.CyberAccounts.updateActiveProfile({username:name,bio:m.querySelector('#edit-bio').value,avatar:currentAvatar});
+        m.remove();render();
+      }catch(e){
+        console.error(e);saveBtn.disabled=false;saveBtn.textContent='Guardar cambios';if(status)status.textContent=`❌ ${e.message||'No se pudo guardar el perfil.'}`;
       }
-    };
-
-    m.querySelectorAll('.btn-avatar-preset-edit').forEach(btn => {
-      btn.onclick = () => {
-        currentAvatar = btn.textContent;
-        m.querySelector('#modal-avatar-preview').innerHTML = currentAvatar;
-      };
-    });
-
-    m.querySelector('#close').onclick = m.querySelector('#cancel').onclick = () => m.remove();
-
-    m.querySelector('#save').onclick = async () => {
-      const name = m.querySelector('#edit-name').value.trim();
-      if (!name) return alert('Escribe un nombre de usuario.');
-      await window.CyberAccounts.updateActiveProfile({
-        username: name,
-        bio: m.querySelector('#edit-bio').value,
-        avatar: currentAvatar
-      });
-      m.remove();
-      render();
     };
   }
 
-  window.CyberProfileAccounts = { render };
-  if (window.CyberApp) window.CyberApp.renderProfile = render;
-  window.addEventListener('cyberlab_account_changed', () => {
-    if (window.CyberApp?.updateHeaderStats) window.CyberApp.updateHeaderStats();
-    setTimeout(render, 0);
-  });
-  window.addEventListener('cyberlab_state_updated', () => setTimeout(render, 0));
-  setTimeout(render, 0);
+  window.CyberProfileAccounts={render};
+  if(window.CyberApp)window.CyberApp.renderProfile=render;
+  window.addEventListener('cyberlab_account_changed',()=>{window.CyberApp?.updateHeaderStats?.();setTimeout(render,0);});
+  window.addEventListener('cyberlab_state_updated',()=>setTimeout(render,0));
+  setTimeout(render,0);
 })();
