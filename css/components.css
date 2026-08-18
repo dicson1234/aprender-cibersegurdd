@@ -672,11 +672,26 @@
   position: relative;
 }
 
+.serpentine-path::before {
+  content: '';
+  position: absolute;
+  top: 40px;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  background: linear-gradient(180deg, rgba(0, 240, 255, 0.4) 0%, rgba(163, 113, 247, 0.4) 50%, rgba(57, 211, 83, 0.4) 100%);
+  border-radius: 4px;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .path-stage-divider {
   width: 100%;
   text-align: center;
-  margin: 20px 0 10px 0;
+  margin: 24px 0 12px 0;
   position: relative;
+  z-index: 2;
 }
 
 .path-stage-divider::before {
@@ -699,7 +714,9 @@
   border: 1px solid var(--accent-purple);
   color: var(--accent-purple);
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(163, 113, 247, 0.2);
 }
 
 .node-wrapper {
@@ -707,6 +724,7 @@
   flex-direction: column;
   align-items: center;
   position: relative;
+  z-index: 2;
   transition: transform 0.3s ease;
 }
 
