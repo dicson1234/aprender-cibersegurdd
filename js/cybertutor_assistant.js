@@ -4,9 +4,22 @@ class CyberTutorAssistant {
 
   initWidget(){
     if(document.getElementById('cybertutor-fab'))return;
-    const fab=document.createElement('button');fab.id='cybertutor-fab';fab.className='cybertutor-fab-btn';fab.setAttribute('aria-label','Abrir CyberTutor IA');
-    fab.innerHTML='<span class="fab-icon">🤖</span><span class="fab-label">CyberTutor</span><span class="fab-pulse"></span>';
+    const fab=document.createElement('button');fab.id='cybertutor-fab';fab.className='cybertutor-robot-fab';fab.setAttribute('aria-label','Abrir CyberTutor IA');
+    fab.innerHTML=`
+      <div class="robot-face">
+        <div class="robot-head">
+          <div class="robot-antenna"><span class="antenna-bulb"></span></div>
+          <div class="robot-visor">
+            <div class="eye left-eye" id="left-eye"><div class="pupil" id="left-pupil"></div></div>
+            <div class="eye right-eye" id="right-eye"><div class="pupil" id="right-pupil"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="robot-pulse-ring"></div>
+    `;
     fab.onclick=()=>this.toggleDrawer();document.body.appendChild(fab);
+
+    this.initEyeTracking(fab);
 
     const drawer=document.createElement('div');drawer.id='cybertutor-drawer';drawer.className='cybertutor-drawer-panel';drawer.setAttribute('aria-label','CyberTutor IA');drawer.setAttribute('aria-hidden','true');
     drawer.innerHTML=`
@@ -24,6 +37,50 @@ class CyberTutorAssistant {
     drawer.querySelector('#cybertutor-drawer-send-btn').onclick=()=>this.sendMessage();
     drawer.querySelector('#cybertutor-drawer-input').addEventListener('keydown',e=>{if(e.key==='Enter')this.sendMessage();});
     drawer.querySelectorAll('.quick-chip').forEach(btn=>btn.onclick=()=>this.sendQuickPrompt(btn.dataset.prompt));
+  }
+
+  initEyeTracking(fab){
+    const leftPupil = fab.querySelector('#left-pupil');
+    const rightPupil = fab.querySelector('#right-pupil');
+    const leftEye = fab.querySelector('#left-eye');
+    const rightEye = fab.querySelector('#right-eye');
+
+    const updateEyes = (targetX, targetY) => {
+      [ { eye: leftEye, pupil: leftPupil }, { eye: rightEye, pupil: rightPupil } ].forEach(({ eye, pupil }) => {
+        if (!eye || !pupil) return;
+        const rect = eye.getBoundingClientRect();
+        const eyeCenterX = rect.left + rect.width / 2;
+        const eyeCenterY = rect.top + rect.height / 2;
+
+        const dx = targetX - eyeCenterX;
+        const dy = targetY - eyeCenterY;
+        const angle = Math.atan2(dy, dx);
+        const dist = Math.min(3.5, Math.hypot(dx, dy) / 25);
+
+        const offsetX = Math.cos(angle) * dist;
+        const offsetY = Math.sin(angle) * dist;
+
+        pupil.style.transform = `translate(${offsetX.toFixed(1)}px, ${offsetY.toFixed(1)}px)`;
+      });
+    };
+
+    window.addEventListener('pointermove', e => updateEyes(e.clientX, e.clientY), { passive: true });
+    window.addEventListener('touchmove', e => {
+      if (e.touches[0]) updateEyes(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    // Blink Loop
+    setInterval(() => {
+      leftEye.classList.add('blinking');
+      rightEye.classList.add('blinking');
+      setTimeout(() => {
+        leftEye.classList.remove('blinking');
+        rightEye.classList.remove('blinking');
+      }, 160);
+    }, 3800);
+
+    fab.addEventListener('pointerenter', () => fab.classList.add('emotion-happy'));
+    fab.addEventListener('pointerleave', () => fab.classList.remove('emotion-happy'));
   }
 
   toggleDrawer(force){

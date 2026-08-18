@@ -484,3 +484,131 @@
   font-size: 1.2rem;
   cursor: pointer;
 }
+
+/* ==========================================================================
+   Interactive Animated Robot Eye AI Companion Button
+   ========================================================================== */
+.cybertutor-robot-fab {
+  position: fixed;
+  bottom: 74px;
+  right: 18px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #0e2030 0%, #050b10 100%);
+  border: 2px solid #00f0ff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(0, 240, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10020;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  overflow: visible;
+  padding: 0;
+}
+.cybertutor-robot-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 240, 255, 0.6);
+}
+
+.robot-face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.robot-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.robot-antenna {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 8px;
+  background: #00f0ff;
+}
+.antenna-bulb {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00f0ff;
+  box-shadow: 0 0 8px #00f0ff;
+  animation: antenna-pulse 2s infinite ease-in-out;
+}
+@keyframes antenna-pulse {
+  0%, 100% { opacity: 0.5; box-shadow: 0 0 4px #00f0ff; }
+  50% { opacity: 1; box-shadow: 0 0 12px #00f0ff, 0 0 20px #00f0ff; }
+}
+
+.robot-visor {
+  width: 42px;
+  height: 26px;
+  background: #03080d;
+  border-radius: 13px;
+  border: 1px solid rgba(0, 240, 255, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 4px;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.9);
+  position: relative;
+  overflow: hidden;
+}
+
+.eye {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: rgba(0, 240, 255, 0.12);
+  border: 1.5px solid #00f0ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.12s ease, height 0.1s ease;
+}
+
+.pupil {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00f0ff;
+  box-shadow: 0 0 8px #00f0ff, 0 0 12px #ffffff;
+  position: absolute;
+  transition: transform 0.05s ease-out;
+}
+
+.eye.blinking {
+  transform: scaleY(0.08) !important;
+  border-color: #00f0ff;
+}
+
+.cybertutor-robot-fab.emotion-happy .eye {
+  border-radius: 50% 50% 20% 20%;
+  height: 11px;
+}
+
+.robot-pulse-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  animation: robot-ring-pulse 2.5s infinite ease-out;
+  pointer-events: none;
+}
+@keyframes robot-ring-pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
