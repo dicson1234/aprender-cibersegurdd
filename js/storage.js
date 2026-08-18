@@ -52,7 +52,12 @@ class StorageManager{
   key(id=this.activeAccountId){return id?`${STORAGE_PREFIX}${id}`:null;}
 
   legacyKeysFor(id){
-    return LEGACY_PREFIXES.map(prefix=>`${prefix}${id}`).concat(LEGACY_KEYS);
+    const keys=LEGACY_PREFIXES.map(prefix=>`${prefix}${id}`);
+    // Global v1/v2 state is only a valid migration source when this browser
+    // still has a single account. Never copy one user's legacy state into a
+    // different account created later.
+    if((window.CyberAccounts?.accounts||[]).length<=1)keys.push(...LEGACY_KEYS);
+    return keys;
   }
 
   setActiveAccount(id){
@@ -67,20 +72,17 @@ class StorageManager{
     try{
       const key=this.key(id);
       let stored=key?localStorage.getItem(key):null;
-
       if(!stored){
         for(const legacyKey of this.legacyKeysFor(id)){
           const legacy=localStorage.getItem(legacyKey);
           if(legacy){stored=legacy;localStorage.removeItem(legacyKey);break;}
         }
       }
-
       let source=cloneDefaultState();
       if(stored){
         const parsed=JSON.parse(stored);
         source=isObject(parsed)&&isObject(parsed.data)?parsed.data:parsed;
       }
-
       const data=sanitizeState(source);
       localStorage.setItem(key,JSON.stringify(data));
       return data;
@@ -146,7 +148,6 @@ class StorageManager{
       const candidate=isObject(parsed)&&isObject(parsed.data)?parsed.data:parsed;
       if(!isObject(candidate))throw new Error('Formato inválido');
       if(!this.activeAccountId)throw new Error('No hay cuenta activa');
-
       this.saveData(candidate,true,{sync:false});
 
       const importedAccount=parsed&&isObject(parsed.account)?parsed.account:null;
